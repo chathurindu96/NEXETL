@@ -16,5 +16,6 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "nexetl.settings"
 pythonpath = ["src"]
 testpaths = ["tests"]

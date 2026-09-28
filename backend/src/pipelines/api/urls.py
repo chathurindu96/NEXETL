@@ -2,7 +2,7 @@
 
 from django.urls import URLPattern, URLResolver, path
 
-from pipelines.api.views import (
+from .views import (
     PipelineDefinitionCollectionView,
     PipelineDefinitionDetailView,
     csrf_bootstrap,

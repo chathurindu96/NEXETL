@@ -1,6 +1,6 @@
 """DRF adapters for the governed Increment 1 Pipeline Definition API."""
 
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
@@ -15,9 +15,9 @@ from pipelines.infrastructure.persistence.store import DjangoPipelineDefinitionS
 
 
 @ensure_csrf_cookie
-def csrf_bootstrap(_: HttpRequest) -> Response:
+def csrf_bootstrap(_: HttpRequest) -> HttpResponse:
     """Establish Django's CSRF cookie for direct browser-to-API requests."""
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
 
 class PipelineDefinitionCollectionView(APIView):

@@ -1,6 +1,6 @@
 # Backend Foundation Database Operations
 
-This slice configures Django for the existing WP-01 PostgreSQL service. It does not create application-domain tables or run migrations.
+Increment 1 owns its application schema through Django migrations. It never uses ad-hoc DDL.
 
 ## Local connection profile
 
@@ -125,7 +125,16 @@ This opens a framework-managed connection only. It does not create a domain tabl
 
 Application schema must be created through governed Django migrations, not ad-hoc manual DDL.
 
-The future `nexetl_pipeline_definition` table belongs to the later authorized Django model/migration slice. It is not created, proposed as manual DDL, or migrated here.
+`pipelines/migrations/0001_initial.py` owns the Increment 1 table:
+
+```text
+nexetl_pipeline_definition(id uuid primary key)
+```
+
+No application migration has been applied in this environment: the existing
+loopback PostgreSQL service rejected the configured `nexetl` credentials during
+the migration-history connection check. Correct local credentials are required
+before running `uv run python manage.py migrate`.
 
 ## Commands and queries executed in this slice
 

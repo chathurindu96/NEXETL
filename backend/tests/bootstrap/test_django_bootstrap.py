@@ -19,12 +19,12 @@ def controlled_bootstrap_environment(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_django_bootstrap_entry_points_import(
     controlled_bootstrap_environment: None,
 ) -> None:
-    """The settings, root URLs, ASGI, and WSGI adapters load without feature code."""
+    """The settings, root URLs, ASGI, and WSGI adapters load with Increment 1 routes."""
     urls = importlib.import_module("nexetl.urls")
     asgi = importlib.import_module("nexetl.asgi")
     wsgi = importlib.import_module("nexetl.wsgi")
 
     assert len(urls.urlpatterns) == 1
-    assert urls.urlpatterns[0].url_patterns == []
+    assert len(urls.urlpatterns[0].url_patterns) == 3
     assert asgi.application is not None
     assert wsgi.application is not None

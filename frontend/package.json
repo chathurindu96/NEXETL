@@ -2,6 +2,26 @@
   "name": "nexetl-frontend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "NEXETL frontend dependency boundary",
-  "packageManager": "npm@11.6.2"
+  "packageManager": "npm@11.6.2",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^7.0.1",
+    "@sveltejs/kit": "^2.70.3",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@testing-library/svelte": "^5.4.2",
+    "@types/node": "^24.10.1",
+    "jsdom": "^29.1.1",
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.3.6",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.1",
+    "vitest": "^4.1.11"
+  }
 }

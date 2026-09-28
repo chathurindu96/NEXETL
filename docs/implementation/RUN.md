@@ -182,9 +182,23 @@ uv run python manage.py runserver 127.0.0.1:8000
 
 Purpose: Start the local Django development process on the DES-001 port.
 
-Prerequisite: PostgreSQL and backend process configuration are available. No Pipeline Definition route exists in this slice.
+Prerequisite: PostgreSQL and backend process configuration are available, and
+the Increment 1 migration has been applied. The browser API is available at
+`/api/`; use the SvelteKit frontend for the registration route.
 
 Expected behavior: Django listens on `127.0.0.1:8000`.
+
+## Run the SvelteKit frontend
+
+Working directory: `C:\Projects\NEXETL\frontend`
+
+```cmd
+npm run dev
+```
+
+The local Vite proxy forwards `/api` requests to `http://127.0.0.1:8000`.
+The approved Increment 1 browser routes are `/pipelines/new` and
+`/pipelines/{pipelineDefinitionId}`.
 
 ## Stop the Django development server
 

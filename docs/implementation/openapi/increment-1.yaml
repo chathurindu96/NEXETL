@@ -1,0 +1,96 @@
+openapi: 3.1.0
+info:
+  title: NEXETL Increment 1 API
+  version: 0.1.0
+  description: >-
+    The approved Increment 1 Pipeline Definition registration and inspection
+    contract. Browser clients use a Django-managed session and obtain a CSRF
+    cookie from the bootstrap operation before state-changing requests.
+paths:
+  /api/security/csrf/:
+    get:
+      summary: Bootstrap the browser CSRF cookie
+      responses:
+        '204':
+          description: CSRF cookie established; no response body.
+  /api/pipeline-definitions/:
+    post:
+      summary: Register a Pipeline Definition
+      security:
+        - sessionAuth: []
+      description: Requires an authenticated principal with `pipeline_definition.register` and a valid CSRF token.
+      responses:
+        '201':
+          description: Pipeline Definition registered.
+          headers:
+            Location:
+              required: true
+              schema: { type: string, format: uri-reference }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PipelineDefinition' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AuthorizationDenied' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /api/pipeline-definitions/{pipelineDefinitionId}/:
+    get:
+      summary: Inspect a Pipeline Definition
+      security:
+        - sessionAuth: []
+      description: Requires `pipeline_definition.inspect`; authorization occurs before resource lookup.
+      parameters:
+        - name: pipelineDefinitionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Pipeline Definition found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PipelineDefinition' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AuthorizationDenied' }
+        '404': { $ref: '#/components/responses/PipelineDefinitionNotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: Django-managed HttpOnly session cookie. POST also requires `X-CSRFToken` matching the CSRF cookie.
+  schemas:
+    PipelineDefinition:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string, format: uuid }
+      additionalProperties: false
+    Error:
+      type: object
+      required: [code, category, message]
+      properties:
+        code: { type: string }
+        category: { type: string }
+        message: { type: string }
+        details: {}
+        correlationId: { type: string }
+  responses:
+    ValidationFailed:
+      description: Invalid request input.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    AuthenticationRequired:
+      description: No authenticated principal.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    AuthorizationDenied:
+      description: Authenticated principal lacks the required capability, or CSRF validation failed.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    PipelineDefinitionNotFound:
+      description: Pipeline Definition does not exist.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    InternalError:
+      description: Sanitized server failure.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
