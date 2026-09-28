@@ -18,6 +18,10 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'nexetl_pipeline_definition',
+                'permissions': (
+                    ('register_pipeline_definition', 'Can register pipeline definition'),
+                    ('inspect_pipeline_definition', 'Can inspect pipeline definition'),
+                ),
             },
         ),
     ]

@@ -53,6 +53,12 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
 
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "nexetl.api.errors.exception_handler",
+}
+
+CSRF_FAILURE_VIEW = "nexetl.api.csrf.csrf_failure"
+
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = CONFIGURATION.session_cookie_secure
