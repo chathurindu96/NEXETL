@@ -194,6 +194,11 @@ the Increment 1 migration has been applied. The browser API is available at
 
 Expected behavior: Django listens on `127.0.0.1:8000`.
 
+The backend root (`/`) returns safe service metadata. Every backend request
+emits an INFO console line containing only method, path, status, and duration.
+Request/response bodies, headers, cookies, query strings, and configuration
+values are intentionally excluded.
+
 ## Run the SvelteKit frontend
 
 Working directory: `C:\Projects\NEXETL\frontend`
@@ -205,6 +210,10 @@ npm run dev
 The local Vite proxy forwards `/api` requests to `http://127.0.0.1:8000`.
 The approved Increment 1 browser routes are `/pipelines/new` and
 `/pipelines/{pipelineDefinitionId}`.
+
+The frontend root (`/`) redirects through SvelteKit navigation to
+`/pipelines/new`. Unknown browser routes show a friendly error page, and the
+local `/favicon.svg` prevents a normal-workflow favicon 404.
 
 ## Stop the Django development server
 

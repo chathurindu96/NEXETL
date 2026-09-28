@@ -24,6 +24,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "nexetl.middleware.RequestLoggingMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -64,3 +65,22 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = CONFIGURATION.session_cookie_secure
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = CONFIGURATION.csrf_cookie_secure
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "nexetl": {
+            "format": "{asctime} {levelname} {name} {message}",
+            "style": "{",
+        }
+    },
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "nexetl"}},
+    "loggers": {
+        "nexetl": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "pipelines": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "nexetl.request": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.server": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}

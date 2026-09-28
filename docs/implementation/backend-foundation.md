@@ -118,9 +118,22 @@ What it does not do: it does not define domain models, API behavior, authenticat
 
 Why it exists: provides the required Django root URL composition point.
 
-What it does: exposes an intentionally empty route list.
+What it does: composes `/api/` and a minimal non-business `/` service index.
 
-What it does not do: it does not create Pipeline Definition or security endpoints.
+What it does not do: it does not place Pipeline Definition behavior in the
+root composition module.
+
+### `backend/src/nexetl/middleware.py`
+
+Why it exists: provides safe local request observability using standard Python
+logging.
+
+What it does: logs only HTTP method, path without query string, response status,
+and duration. Unexpected API failures are logged server-side while the external
+error contract remains sanitized.
+
+What it does not do: it does not log request/response bodies, headers, cookies,
+session values, CSRF tokens, or configuration secrets.
 
 ### `backend/src/nexetl/asgi.py`
 

@@ -24,3 +24,10 @@ Pipeline Definition table has exactly the governed UUID primary key column.
 Browser E2E is not configured: no Playwright/axe setup exists, and the approved
 Increment 1 API has no browser login operation. No authentication or CSRF
 bypass was introduced merely to simulate that flow.
+
+## Runtime usability and observability
+
+The backend root returns a safe non-business service index, and the frontend
+root routes users to registration. SvelteKit provides a friendly unknown-route
+page and a local favicon. Backend request logs include only method, path,
+status, and duration; API exceptions remain externally sanitized.

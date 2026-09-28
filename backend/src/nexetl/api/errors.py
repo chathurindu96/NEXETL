@@ -1,5 +1,7 @@
 """Centralized safe translation of DRF failures into the Increment 1 contract."""
 
+import logging
+
 from rest_framework import status
 from rest_framework.exceptions import (
     MethodNotAllowed,
@@ -11,6 +13,9 @@ from rest_framework.exceptions import (
 from rest_framework.response import Response
 
 from nexetl.api.authentication import CsrfRejected
+
+
+logger = logging.getLogger("nexetl.api")
 
 
 def exception_handler(exc: Exception, context: dict[str, object]) -> Response:
@@ -75,6 +80,7 @@ def _translate(exc: Exception) -> tuple[str, str, str, int, object | None]:
             status.HTTP_405_METHOD_NOT_ALLOWED,
             None,
         )
+    logger.exception("Unhandled API exception translated to a safe response")
     return (
         "NEXETL_INTERNAL_ERROR",
         "internal",
