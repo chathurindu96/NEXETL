@@ -14,6 +14,10 @@ NEX-102 adds the approved `pipelines` Django-app/package boundary only. Its
 layer mapping and focused structural verification are recorded in
 `docs/implementation/sprint-001/NEX-102-EVIDENCE.md`.
 
+NEX-103 adds the empty `/api/` URL-composition seam only. Its resolver
+inventory and negative-route verification are recorded in
+`docs/implementation/sprint-001/NEX-103-EVIDENCE.md`.
+
 ## Applicable requirements
 
 - NEXETL-REQ-095 — Secret Confidentiality
