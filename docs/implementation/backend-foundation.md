@@ -22,8 +22,8 @@ NEX-104 adds repeatable AST-based dependency-direction and cycle verification
 in the test boundary only. Its controlled violation proof and full-suite
 evidence are recorded in `docs/implementation/sprint-001/NEX-104-EVIDENCE.md`.
 
-NEX-105 centralizes process-environment configuration resolution and removes
-the unapproved local dotenv-loading behavior. Its boundary and verification
+NEX-105 centralizes configuration resolution, including approved root `.env`
+loading for local development with process-environment precedence. Its boundary and verification
 evidence are recorded in `docs/implementation/sprint-001/NEX-105-EVIDENCE.md`.
 
 NEX-106 validates resolved backend configuration before Django readiness with
@@ -72,7 +72,8 @@ Applicable Accepted ADRs are ADR-001 (Core Monorepo), ADR-002 (uv and committed 
 - Explicit environment values override safe documented defaults per ADR-006.
 - Secure cookie defaults are `true` and are independent of debug mode.
 - Bootstrap configuration is process-lifetime stable; no hot reload or runtime override mechanism exists.
-- No dotenv/configuration framework or secret-provider product was introduced.
+- `python-dotenv` loads only the ignored repository-root `.env` with
+  `override=False`; no secret-provider product was introduced.
 
 ## File-by-file explanation
 
@@ -96,11 +97,12 @@ What it does not do: it has no import-time wiring or hidden behavior.
 
 Why it exists: implements ADR-006's centralized startup-resolution boundary in a small testable module.
 
-What it does: resolves process-environment values, safe defaults, typed booleans,
+What it does: loads the repository-root `.env` for local development without
+overwriting process values, then resolves values, safe defaults, typed booleans,
 host lists, and the PostgreSQL port. Secret fields are excluded from
 representations.
 
-What it does not do: it does not load local files, validate deployment
+What it does not do: it does not load files outside the repository root, validate deployment
 semantics, contact a secret manager, introduce universal precedence, support
 hot reload, or expose values to the frontend.
 

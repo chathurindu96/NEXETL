@@ -131,12 +131,9 @@ Application schema must be created through governed Django migrations, not ad-ho
 nexetl_pipeline_definition(id uuid primary key)
 ```
 
-No application migration has been applied in this environment. The NEXETL
-Compose container is healthy and its `nexetl` database is empty, but it is
-currently published on loopback port `5433` because another local process owns
-port `5432`. The host process has no `NEXETL_DB_PASSWORD` supplied. Set the
-private password used when the Compose volume was first initialized and set
-`NEXETL_DB_PORT=5433` before running `uv run python manage.py migrate`.
+The NEXETL Compose container is healthy on loopback port `5433`. The governed
+migration workflow was applied successfully, and the Pipeline Definition table
+has exactly one non-null `uuid` column: `id`.
 
 ## Commands and queries executed in this slice
 
@@ -147,6 +144,7 @@ Executed database-side/tooling commands:
 - `docker compose config --quiet` with a temporary non-secret check password — passed.
 - `docker compose ps` — failed because the Docker daemon was not running.
 
-Executed SQL queries: **None**.
+Read-only schema inspection confirmed the deployed Pipeline Definition table
+has one `id:uuid:NO` column. No ad-hoc DDL was used.
 
 Because the daemon was unavailable, PostgreSQL was not started and the documented SELECT queries and Django connectivity command were not executed. Runtime connectivity remains blocked only by current local Docker state; no competing database configuration was introduced.

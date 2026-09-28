@@ -4,11 +4,11 @@ from django.http import HttpRequest, HttpResponse
 from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import NotAuthenticated, NotFound, PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from nexetl.api.authentication import NexetlSessionAuthentication
 from pipelines.application import InspectPipelineDefinition, RegisterPipelineDefinition
 from pipelines.domain import PipelineDefinitionId
 from pipelines.infrastructure.persistence.store import DjangoPipelineDefinitionStore
@@ -21,7 +21,7 @@ def csrf_bootstrap(_: HttpRequest) -> HttpResponse:
 
 
 class PipelineDefinitionCollectionView(APIView):
-    authentication_classes = [SessionAuthentication]
+    authentication_classes = [NexetlSessionAuthentication]
 
     def post(self, request: HttpRequest) -> Response:
         _require_capability(request, "pipelines.register_pipeline_definition")
@@ -37,7 +37,7 @@ class PipelineDefinitionCollectionView(APIView):
 
 
 class PipelineDefinitionDetailView(APIView):
-    authentication_classes = [SessionAuthentication]
+    authentication_classes = [NexetlSessionAuthentication]
 
     def get(self, request: HttpRequest, pipeline_definition_id: str) -> Response:
         _require_capability(request, "pipelines.inspect_pipeline_definition")

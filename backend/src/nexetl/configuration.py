@@ -5,6 +5,12 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
 class ConfigurationError(ValueError):
@@ -52,10 +58,17 @@ def configure_django_settings_module() -> None:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nexetl.settings")
 
 
+def load_local_development_environment(dotenv_path: Path | None = None) -> None:
+    """Load the ignored root `.env` file without overriding process authority."""
+    load_dotenv(dotenv_path=dotenv_path or REPOSITORY_ROOT / ".env", override=False)
+
+
 def load_backend_configuration(
     environ: Mapping[str, str] | None = None,
 ) -> BackendConfiguration:
-    """Resolve typed backend settings from the process environment."""
+    """Resolve typed settings after optional root `.env` loading for local development."""
+    if environ is None:
+        load_local_development_environment()
     source: Mapping[str, str] = os.environ if environ is None else environ
 
     return BackendConfiguration(

@@ -11,6 +11,7 @@ import pytest
 from nexetl.configuration import (
     ConfigurationError,
     load_backend_configuration,
+    load_local_development_environment,
     validate_backend_configuration,
 )
 
@@ -108,20 +109,55 @@ def test_loader_uses_the_process_environment_when_no_mapping_is_supplied(
 ) -> None:
     monkeypatch.setattr(os, "environ", {"NEXETL_DB_PORT": "5533"})
 
+    monkeypatch.setattr(
+        "nexetl.configuration.load_local_development_environment", lambda: None
+    )
     configuration = load_backend_configuration()
 
     assert configuration.database.port == 5533
 
 
-def test_no_dotenv_dependency_or_local_file_loader_is_present() -> None:
+def test_dotenv_loading_is_centralized_in_the_configuration_boundary() -> None:
     configuration_source = (
         BACKEND_ROOT / "src" / "nexetl" / "configuration.py"
     ).read_text(encoding="utf-8")
     manifest = (BACKEND_ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
-    assert "dotenv" not in configuration_source.lower()
-    assert "dotenv" not in manifest.lower()
-    assert "load_local_environment_files" not in configuration_source
+    assert "from dotenv import load_dotenv" in configuration_source
+    assert "load_local_development_environment" in configuration_source
+    assert 'python-dotenv' in manifest
+
+
+def test_values_are_loaded_from_a_local_dotenv_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    dotenv = tmp_path / ".env"
+    dotenv.write_text(
+        "NEXETL_DJANGO_SECRET_KEY=dotenv-test-secret\n"
+        "NEXETL_DB_PASSWORD=dotenv-test-password\n"
+        "NEXETL_DB_PORT=5433\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(os, "environ", {})
+
+    load_local_development_environment(dotenv)
+    configuration = load_backend_configuration()
+
+    assert configuration.secret_key == "dotenv-test-secret"
+    assert configuration.database.password == "dotenv-test-password"
+    assert configuration.database.port == 5433
+
+
+def test_process_environment_overrides_local_dotenv(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("NEXETL_DB_PORT=5433\n", encoding="utf-8")
+    monkeypatch.setattr(os, "environ", {"NEXETL_DB_PORT": "55432"})
+
+    load_local_development_environment(dotenv)
+
+    assert load_backend_configuration().database.port == 55432
 
 
 def test_raw_process_environment_access_is_centralized() -> None:
@@ -291,6 +327,10 @@ def test_django_database_settings_map_governed_postgresql_values(
         {
             "NEXETL_DJANGO_SECRET_KEY": "test-only-secret-key",
             "NEXETL_DB_PASSWORD": password,
+            "NEXETL_DB_NAME": str(expected["name"]),
+            "NEXETL_DB_USER": str(expected["user"]),
+            "NEXETL_DB_HOST": str(expected["host"]),
+            "NEXETL_DB_PORT": str(expected["port"]),
         }
         | overrides
     )

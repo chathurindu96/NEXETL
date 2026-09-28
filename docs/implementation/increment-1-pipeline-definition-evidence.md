@@ -9,8 +9,8 @@ API exposes only the governed `id` field.
 
 ## Verification
 
-- Backend: 75 tests passed; system check passed; migration consistency reports
-  no model changes.
+- Backend: 79 tests passed; PostgreSQL-backed API integration tests passed;
+  system check passed; migration consistency reports no model changes.
 - Frontend: 7 Vitest tests passed; Svelte diagnostics passed with no warnings;
   production build passed.
 - API/OpenAPI: the three governed operations and stable error shape are in
@@ -18,8 +18,9 @@ API exposes only the governed `id` field.
 
 ## Infrastructure exception
 
-The NEXETL Compose database is reachable on `127.0.0.1:5433` and contains no
-application tables. The host process has no `NEXETL_DB_PASSWORD`; port `5432`
-is occupied by an unrelated local PostgreSQL process. Therefore migration
-application and browser E2E were not claimed. The private Compose database
-password and an explicit `NEXETL_DB_PORT=5433` are required for those checks.
+The NEXETL Compose database is reachable on `127.0.0.1:5433`; migrations were
+applied from the ignored root `.env`. Read-only inspection confirms the
+Pipeline Definition table has exactly the governed UUID primary key column.
+Browser E2E is not configured: no Playwright/axe setup exists, and the approved
+Increment 1 API has no browser login operation. No authentication or CSRF
+bypass was introduced merely to simulate that flow.

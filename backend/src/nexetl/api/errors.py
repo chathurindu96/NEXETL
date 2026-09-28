@@ -10,6 +10,8 @@ from rest_framework.exceptions import (
 )
 from rest_framework.response import Response
 
+from nexetl.api.authentication import CsrfRejected
+
 
 def exception_handler(exc: Exception, context: dict[str, object]) -> Response:
     """Return safe, stable NEXETL errors without framework exception details."""
@@ -25,6 +27,14 @@ def exception_handler(exc: Exception, context: dict[str, object]) -> Response:
 
 
 def _translate(exc: Exception) -> tuple[str, str, str, int, object | None]:
+    if isinstance(exc, CsrfRejected):
+        return (
+            "NEXETL_CSRF_REJECTED",
+            "security",
+            "CSRF validation failed.",
+            status.HTTP_403_FORBIDDEN,
+            None,
+        )
     if isinstance(exc, ValidationError):
         return (
             "NEXETL_VALIDATION_FAILED",

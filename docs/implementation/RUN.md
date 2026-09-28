@@ -1,8 +1,8 @@
 # Backend Foundation Run Commands
 
-All commands are Windows `cmd.exe` compatible. Secret examples are placeholders for local use only; choose private values and never commit them. NEXETL reads configuration from the process or deployment environment only; it does not automatically load `.env` files.
+All commands are Windows `cmd.exe` compatible. Secret examples are placeholders for local use only; choose private values and never commit them. For local development, NEXETL loads the ignored repository-root `.env` without overwriting explicit process or deployment environment values.
 
-## Set backend process configuration
+## Configure local development
 
 Working directory:
 
@@ -10,7 +10,13 @@ Working directory:
 C:\Projects\NEXETL\backend
 ```
 
-Commands:
+Copy `.env.example` to `C:\Projects\NEXETL\.env`, then replace the two secret
+placeholders privately. The root file is shared by Compose and Django. For the
+current local Compose mapping, set `NEXETL_DB_PORT=5433` in `.env`.
+
+Process variables remain the authority for CI, containers, and production.
+The following names are the supported configuration contract if an explicit
+process override is required:
 
 ```cmd
 set NEXETL_DJANGO_SECRET_KEY=YOUR_PRIVATE_LOCAL_SECRET

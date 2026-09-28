@@ -2,9 +2,9 @@
 
 Status: complete for available infrastructure.
 
-The final focused/full backend suite passes with 75 tests and Django system
-check reports no issues. Migration state is consistent (`No changes detected`).
-Live PostgreSQL migration and browser E2E remain blocked because the NEXETL
-container is published on `5433` (with `5432` occupied elsewhere) and the host
-process has no private Compose database password. No alternative database was
-used.
+The final focused/full backend suite passes with 79 tests and Django system
+check reports no issues. Migration state is consistent (`No changes detected`),
+and the live NEXETL Compose database was migrated on port `5433`. PostgreSQL-
+backed API integration tests pass. Browser E2E/accessibility tooling is not
+configured and no approved browser login operation exists, so no bypass was
+introduced.

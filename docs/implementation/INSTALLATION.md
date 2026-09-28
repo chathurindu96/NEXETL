@@ -4,13 +4,15 @@ This document records every installation and dependency-setup command required f
 
 No frontend dependency is installed by this slice.
 
-## NEX-105 configuration dependency cleanup
+## Local `.env` configuration workflow
 
-NEX-105 removed `python-dotenv` from `backend/pyproject.toml` and
-`backend/uv.lock`. Runtime configuration is supplied only through the process
-or deployment environment; `.env` files are not loaded automatically.
+The approved local-development workflow uses `python-dotenv` at the sole
+backend configuration boundary. Copy `.env.example` to the ignored repository
+root `.env`, then replace its secret placeholders with private local values.
+The loader never overwrites explicit process/deployment environment values;
+those remain authoritative for CI, containers, and production.
 
-The removal changed no other direct dependency. Refresh the exact lock state
+Refresh the exact lock state
 after a dependency change with:
 
 ```cmd
