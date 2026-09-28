@@ -91,6 +91,11 @@ This audit trail records every materially relevant terminal command executed dur
 | 85 | `docker compose --env-file .env.example config --quiet` | `C:\Projects\NEXETL` | Verify public-safe local Compose configuration. | **WARNING** | None; validation passed with local Docker-config access warnings. |
 | 86 | `git remote add origin https://github.com/chathurindu96/NEXETL.git` | `C:\Projects\NEXETL` | Add the user-authorized origin after confirming none existed. | **PASS** | Updated local Git config only. |
 | 87 | `git fetch origin --prune`; `git ls-remote --heads origin` | `C:\Projects\NEXETL` | Inspect remote branches/history before publication. | **PASS** | None; origin had no branch heads, so no conflicting NEXETL history was found. |
+| 88 | Scoped `git add` of reviewed public-safe files | `C:\Projects\NEXETL` | Stage the authorized foundation, diagram, Agile, and implementation-documentation publication set. | **PASS** | Git index only; local governed mirror and `change-blast-radius-rule.TXT` were excluded. |
+| 89 | Normalize final blank lines in `docs/diagrams/*.md`; staged diff check | `C:\Projects\NEXETL` | Correct a pre-commit whitespace failure in the diagram catalogue. | **PASS** | 33 public diagram Markdown files normalized; `git diff --cached --check` then passed. |
+| 90 | Three scoped `git commit` operations | `C:\Projects\NEXETL` | Create understandable publication commits. | **PASS** | Created `chore(repo): publish WP-01 development foundation`, `docs(diagrams): add governed architecture diagram set`, and `docs(agile): add NEXETL Scrum backlog and Sprint 1 plan`. |
+| 91 | `git push -u origin main` | `C:\Projects\NEXETL` | Publish the reviewed initial baseline to the verified-empty remote. | **PASS** | Normal new-branch push only; no force push or history rewrite. |
+| 92 | `git ls-remote origin refs/heads/main`; remote tree audit | `C:\Projects\NEXETL` | Verify remote head and public-publication exclusions. | **PASS** | Remote head matched local HEAD; no real environment file or local governed-baseline mirror document was published. |
 
 ## Result conventions
 
