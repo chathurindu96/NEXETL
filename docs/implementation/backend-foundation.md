@@ -18,6 +18,10 @@ NEX-103 adds the empty `/api/` URL-composition seam only. Its resolver
 inventory and negative-route verification are recorded in
 `docs/implementation/sprint-001/NEX-103-EVIDENCE.md`.
 
+NEX-104 adds repeatable AST-based dependency-direction and cycle verification
+in the test boundary only. Its controlled violation proof and full-suite
+evidence are recorded in `docs/implementation/sprint-001/NEX-104-EVIDENCE.md`.
+
 ## Applicable requirements
 
 - NEXETL-REQ-095 — Secret Confidentiality
