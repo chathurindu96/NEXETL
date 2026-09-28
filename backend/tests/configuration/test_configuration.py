@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import json
 import subprocess
 import sys
 
@@ -251,3 +252,87 @@ def test_invalid_configuration_prevents_django_system_check_without_secret_leak(
     assert result.returncode != 0
     assert "NEXETL_DJANGO_SECRET_KEY" in output
     assert "replace-with-a-local-secret" not in output
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected"),
+    [
+        (
+            {},
+            {
+                "name": "nexetl",
+                "user": "nexetl",
+                "host": "127.0.0.1",
+                "port": 5432,
+            },
+        ),
+        (
+            {
+                "NEXETL_DB_NAME": "nexetl_mapping_test",
+                "NEXETL_DB_USER": "mapping_user",
+                "NEXETL_DB_HOST": "192.0.2.10",
+                "NEXETL_DB_PORT": "55432",
+            },
+            {
+                "name": "nexetl_mapping_test",
+                "user": "mapping_user",
+                "host": "192.0.2.10",
+                "port": 55432,
+            },
+        ),
+    ],
+)
+def test_django_database_settings_map_governed_postgresql_values(
+    overrides: dict[str, str], expected: dict[str, str | int]
+) -> None:
+    environment = os.environ.copy()
+    password = "test-only-database-password"
+    environment.update(
+        {
+            "NEXETL_DJANGO_SECRET_KEY": "test-only-secret-key",
+            "NEXETL_DB_PASSWORD": password,
+        }
+        | overrides
+    )
+    script = """
+import json
+import sys
+sys.path.insert(0, 'src')
+import nexetl.settings as settings
+database = settings.DATABASES['default']
+print(json.dumps({
+    'engine': database['ENGINE'],
+    'name': database['NAME'],
+    'user': database['USER'],
+    'host': database['HOST'],
+    'port': database['PORT'],
+    'password_matches': database['PASSWORD'] == 'test-only-database-password',
+}))
+"""
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=BACKEND_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    mapped = json.loads(result.stdout)
+    assert mapped == {
+        "engine": "django.db.backends.postgresql",
+        **expected,
+        "password_matches": True,
+    }
+    assert password not in result.stdout
+
+
+def test_compose_keeps_governed_postgresql_bootstrap_and_port_mapping() -> None:
+    compose = (BACKEND_ROOT.parent / "compose.yaml").read_text(encoding="utf-8")
+
+    assert "POSTGRES_DB: ${NEXETL_DB_NAME:-nexetl}" in compose
+    assert "POSTGRES_USER: ${NEXETL_DB_USER:-nexetl}" in compose
+    assert "POSTGRES_PASSWORD: ${NEXETL_DB_PASSWORD:?NEXETL_DB_PASSWORD must be set}" in compose
+    assert '"127.0.0.1:${NEXETL_DB_PORT:-5432}:5432"' in compose

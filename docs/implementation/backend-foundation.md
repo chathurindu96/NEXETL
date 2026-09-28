@@ -30,6 +30,10 @@ NEX-106 validates resolved backend configuration before Django readiness with
 a single protected diagnostic type. Its validation and startup evidence are
 recorded in `docs/implementation/sprint-001/NEX-106-EVIDENCE.md`.
 
+NEX-107 verifies that the existing PostgreSQL environment mapping is consistent
+across Django, Compose, and documented local defaults, without live database
+activity. Its evidence is recorded in `docs/implementation/sprint-001/NEX-107-EVIDENCE.md`.
+
 ## Applicable requirements
 
 - NEXETL-REQ-095 — Secret Confidentiality

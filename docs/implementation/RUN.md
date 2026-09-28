@@ -29,6 +29,12 @@ Purpose:
 
 Supplies the process-lifetime bootstrap values defined by DES-001. Secure-cookie values are never inferred from debug mode; local HTTP requires explicit `false` overrides.
 
+For host-run Django with Compose PostgreSQL, `NEXETL_DB_HOST=127.0.0.1` and
+`NEXETL_DB_PORT=5432` target the loopback-published database port. To avoid a
+local host-port conflict, set `NEXETL_DB_PORT` to an alternate port (for
+example `55432`) before running Compose and Django. The PostgreSQL container
+continues to listen internally on `5432`.
+
 Prerequisite:
 
 Choose private values for both required secret variables. Do not use the placeholder strings from `.env.example` unchanged.

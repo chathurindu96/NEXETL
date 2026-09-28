@@ -19,6 +19,20 @@ resolved values through the process environment and the centralized
 resolves database configuration. It does not start PostgreSQL, connect to it,
 execute SQL, run migrations, or change schema.
 
+## NEX-107 local host-to-container mapping
+
+For the approved host-run Django local profile, both Django and Compose use
+`NEXETL_DB_PORT` as the published loopback host port:
+
+```text
+Django on host → 127.0.0.1:NEXETL_DB_PORT
+Compose binding → 127.0.0.1:NEXETL_DB_PORT → postgres container:5432
+```
+
+An override such as `NEXETL_DB_PORT=55432` changes the Django connection port
+and the host-published port together. It does not change PostgreSQL's internal
+container port, which remains `5432`, or broaden loopback-only exposure.
+
 ## Validate the Compose definition
 
 Working directory: `C:\Projects\NEXETL`
