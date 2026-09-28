@@ -1,0 +1,21 @@
+[project]
+name = "nexetl-backend"
+version = "0.1.0"
+description = "NEXETL backend dependency boundary"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=6.1.1",
+    "djangorestframework>=3.18.1",
+    "psycopg[binary]>=3.3.6",
+    "python-dotenv>=1.2.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-django>=4.14.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

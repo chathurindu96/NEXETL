@@ -1,0 +1,99 @@
+# Backend Foundation Command Log
+
+This audit trail records every materially relevant terminal command executed during the first small backend-foundation slice. Google Drive connector reads are non-terminal operations and are recorded in the governed-source evidence, not as shell commands. No real secret value is included.
+
+| Seq. | Command | Working directory | Reason | Result | Files changed |
+|---:|---|---|---|---|---|
+| 1 | `Get-Content -Raw -LiteralPath '<attachment>/Pasted text.txt'` | `C:\Projects\NEXETL` | Read the authorized slice instructions. | **PASS** | None |
+| 2 | `cmd.exe /d /c "dir /b"` | `C:\Projects\NEXETL` | Inventory repository root. | **PASS** | None |
+| 3 | `cmd.exe /d /c "dir /s /b backend"` | `C:\Projects\NEXETL` | Inventory the WP-01 backend foundation. | **PASS** | None |
+| 4 | `cmd.exe /d /c "git status --short --branch"` | `C:\Projects\NEXETL` | Capture starting working-tree state. | **WARNING** | None; Git could not read the user-global ignore file. |
+| 5 | `cmd.exe /d /c "type backend\pyproject.toml"` | `C:\Projects\NEXETL` | Inspect backend dependency declaration. | **PASS** | None |
+| 6 | `cmd.exe /d /c "type .env.example"` | `C:\Projects\NEXETL` | Inspect governed environment names/placeholders. | **PASS** | None |
+| 7 | `cmd.exe /d /c "type compose.yaml"` | `C:\Projects\NEXETL` | Inspect existing PostgreSQL foundation. | **PASS** | None |
+| 8 | `cmd.exe /d /c "type .gitignore"` | `C:\Projects\NEXETL` | Inspect secret and virtual-environment ignores. | **PASS** | None |
+| 9 | `rg -n -C 4 "WP-02\|Django\|settings\|..." PLAN-001 DES-001` | `C:\Projects\NEXETL` | Locate work-package, layout, and configuration authority. | **PASS** | None |
+| 10 | `rg -n "backend/src\|manage.py\|NEXETL_DJANGO\|NEXETL_DB_\|..." DES-001` | `C:\Projects\NEXETL` | Locate exact DES-001 layout and environment variables. | **PASS** | None |
+| 11 | `Get-Content DES-001 selected ranges (repository tree, configuration, tests, local runtime)` | `C:\Projects\NEXETL` | Read applicable detailed-design sections. | **PASS** | None |
+| 12 | `Get-Content DES-001 selected ranges (startup validation, dependency direction, local topology)` | `C:\Projects\NEXETL` | Read remaining applicable detailed-design sections. | **PASS** | None |
+| 13 | `rg -n -A 14 -B 2 "NEXETL-REQ-(095\|112\|113\|114\|115\|117\|119\|120)" REG-002; rg ... Project State` | `C:\Projects\NEXETL` | Confirm applicable requirement IDs and authorization state. | **PASS** | None |
+| 14 | `rg -n -A 8 -B 2 "NEXETL-REQ-(095\|112\|113\|114\|115\|117\|119\|120)" DOC-007` | `C:\Projects\NEXETL` | Read exact requirement statements. | **PASS** | None |
+| 15 | `cmd.exe /d /c "uv --version"` | `C:\Projects\NEXETL` | Confirm governed package manager availability. | **PASS** | None |
+| 16 | `cmd.exe /d /c "python --version"` | `C:\Projects\NEXETL` | Check direct Python availability. | **FAIL** | None; python was not on PATH. |
+| 17 | `cmd.exe /d /c "findstr ... backend\uv.lock"` | `C:\Projects\NEXETL` | Attempt concise lock inspection. | **FAIL** | None; no matching output returned. |
+| 18 | `cmd.exe /d /c "type backend\uv.lock"` | `C:\Projects\NEXETL` | Read initial lock state. | **PASS** | None |
+| 19 | `rg -n headings across DOC-016/020/023/024/025 and applicable ADRs` | `C:\Projects\NEXETL` | Index applicable governed sections. | **PASS** | None |
+| 20 | `rg -n "^##+ " DOC-016` | `C:\Projects\NEXETL` | Index backend architecture sections. | **PASS** | None |
+| 21 | `Get-Content DOC-016 selected ranges` | `C:\Projects\NEXETL` | Read backend boundaries, configuration, PostgreSQL, and testing rules. | **PASS** | None |
+| 22 | `Get-Content DOC-020 selected ranges` | `C:\Projects\NEXETL` | Read configuration ownership, precedence, validation, and secret rules. | **PASS** | None |
+| 23 | `Get-Content ADR-006 selected ranges` | `C:\Projects\NEXETL` | Read the Accepted configuration decision and verification implications. | **PASS** | None |
+| 24 | `Get-Content ADR-001 and ADR-002 selected decision/implementation ranges` | `C:\Projects\NEXETL` | Read repository and dependency-management decisions. | **PASS** | None |
+| 25 | `Get-Content DOC-023 selected ranges` | `C:\Projects\NEXETL` | Read Python, Django, configuration, security, and documentation standards. | **PASS** | None |
+| 26 | `rg -n -A 8 -B 2 "Core Monorepo\|backend/\|pyproject\|..." DOC-024` | `C:\Projects\NEXETL` | Read repository/workflow placement rules. | **PASS** | None |
+| 27 | `rg -n -A 7 -B 2 "Unit Testing\|Integration Testing\|Configuration\|..." DOC-025` | `C:\Projects\NEXETL` | Read applicable testing expectations. | **PASS** | None |
+| 28 | `Get-Content -Raw Google Drive SKILL.md` | `C:\Projects\NEXETL` | Load required Drive verification instructions. | **PASS** | None |
+| 29 | `cmd.exe /d /c "uv python find 3.13"` | `C:\Projects\NEXETL\backend` | Locate Python 3.13. | **FAIL** | None; default uv cache path could not initialize. |
+| 30 | `cmd.exe /d /c "set UV_CACHE_DIR=%TEMP%\nexetl-wp02-uv-cache&& uv python find 3.13"` | `C:\Projects\NEXETL\backend` | Retry Python discovery with isolated cache. | **FAIL** | None; no interpreter visible in sandbox context. |
+| 31 | `cmd.exe /d /c "dir /b <local-Python-3.13-path>"` | `C:\Projects\NEXETL\backend` | Check a local Python 3.13 interpreter path. | **FAIL** | None; sandbox could not see the file. |
+| 32 | `cmd.exe /d /c "where py"` | `C:\Projects\NEXETL\backend` | Check for Windows Python launcher. | **FAIL** | None; launcher not found. |
+| 33 | `cmd.exe /d /c "py -0p"` | `C:\Projects\NEXETL\backend` | Enumerate launcher-managed Python runtimes. | **FAIL** | None; launcher not found. |
+| 34 | `cmd.exe /d /c "docker --version"` | `C:\Projects\NEXETL` | Check Docker client. | **WARNING** | None; client 28.5.1 available, user Docker config unreadable. |
+| 35 | `cmd.exe /d /c "docker info --format {{.ServerVersion}}"` | `C:\Projects\NEXETL` | Check Docker daemon state. | **FAIL** | None; Docker named pipe/daemon unavailable. |
+| 36 | `cmd.exe /d /c "set UV_CACHE_DIR=...&& set UV_PYTHON_INSTALL_DIR=...&& uv add --python 3.13 django djangorestframework \"psycopg[binary]\""` | `C:\Projects\NEXETL\backend` | Install runtime dependencies in sandbox. | **FAIL** | None; network socket access blocked. |
+| 37 | `Same uv add command with elevated permission` | `C:\Projects\NEXETL\backend` | Retry authorized dependency installation. | **FAIL** | Created ignored `.venv`; elevated command started in C:\ and did not find project. |
+| 38 | `cmd.exe /d /c "cd /d C:\Projects\NEXETL\backend && ... uv add ..."` | `C:\Projects\NEXETL\backend` | Retry with explicit directory. | **FAIL** | No manifest change; elevated command still resolved C:\. |
+| 39 | `cmd.exe /d /c "... uv --directory C:\Projects\NEXETL\backend add ..."` | `C:\Projects\NEXETL\backend` | Retry with uv directory option. | **FAIL** | No manifest change; cmd wrapper still resolved C:\. |
+| 40 | `cmd.exe /d /c "uv add --help"` | `C:\Projects\NEXETL\backend` | Inspect supported project/directory/cache options. | **PASS** | None |
+| 41 | `cmd.exe /d /c "uv add --project C:\Projects\NEXETL\backend ..."` | `C:\Projects\NEXETL\backend` | Retry with explicit uv project option. | **FAIL** | No manifest change; cmd wrapper still resolved C:\. |
+| 42 | `cmd.exe /d /c "uv --project C:\Projects\NEXETL\backend ... add ..."` | `C:\Projects\NEXETL\backend` | Retry with global option ordering. | **FAIL** | No manifest change; cmd wrapper still resolved C:\. |
+| 43 | `uv --project C:\Projects\NEXETL\backend --cache-dir ... add --python ... django djangorestframework 'psycopg[binary]'` | `C:\Projects\NEXETL\backend` | Install the three required runtime dependencies without the problematic cmd wrapper. | **PASS** | Modified `backend/pyproject.toml`, `backend/uv.lock`; synchronized ignored `.venv`. |
+| 44 | `uv --project C:\Projects\NEXETL\backend --cache-dir ... add --dev --python ... pytest pytest-django` | `C:\Projects\NEXETL\backend` | Install governed backend test foundation. | **PASS** | Modified `backend/pyproject.toml`, `backend/uv.lock`; synchronized ignored `.venv`. |
+| 45 | `cmd.exe /d /c "type backend\pyproject.toml"` | `C:\Projects\NEXETL` | Inspect direct dependency declarations after install. | **PASS** | None |
+| 46 | `cmd.exe /d /c "uv --project C:\Projects\NEXETL\backend tree --depth 1"` | `C:\Projects\NEXETL` | Inspect resolved direct dependency versions. | **FAIL** | None; default uv cache path could not initialize. |
+| 47 | `cmd.exe /d /c "uv --project C:\Projects\NEXETL\backend --cache-dir %TEMP%\nexetl-wp02-uv-cache tree --depth 1"` | `C:\Projects\NEXETL` | Retry dependency-tree inspection with isolated cache. | **PASS** | None |
+| 48 | `cmd.exe /d /c "uv ... lock --check --offline --python ..."` | `C:\Projects\NEXETL\backend` | Verify lock state inside sandbox. | **FAIL** | None; sandbox could not access installed interpreter. |
+| 49 | `cmd.exe /d /c "uv ... run --offline pytest"` | `C:\Projects\NEXETL\backend` | Run tests inside sandbox. | **FAIL** | None; sandbox could not access elevated-created `.venv`. |
+| 50 | `cmd.exe /d /c "set NEXETL_...=<temporary check values>&& uv ... run ... manage.py check"` | `C:\Projects\NEXETL\backend` | Run Django check inside sandbox. | **FAIL** | None; sandbox could not access elevated-created `.venv`. |
+| 51 | `uv --project ... lock --check --offline --python ...` | `C:\Projects\NEXETL\backend` | Verify lock state with installation context. | **PASS** | None; 15 packages resolved from lock. |
+| 52 | `uv --project ... run --offline pytest C:\Projects\NEXETL\backend\tests` | `C:\Projects\NEXETL\backend` | Run focused backend configuration tests. | **PASS** | None; 13 tests passed. |
+| 53 | `Set temporary non-secret check environment; uv --project ... run --offline python ...\manage.py check` | `C:\Projects\NEXETL\backend` | Run Django system check. | **PASS** | None; no issues identified. |
+| 54 | `cmd.exe /d /c "set NEXETL_DB_PASSWORD=<temporary check value>&& docker compose config --quiet"` | `C:\Projects\NEXETL` | Validate Compose configuration. | **WARNING** | None; validation passed, Docker user-config access warnings emitted. |
+| 55 | `cmd.exe /d /c "set NEXETL_DB_PASSWORD=<temporary check value>&& docker compose ps"` | `C:\Projects\NEXETL` | Inspect PostgreSQL service state. | **FAIL** | None; Docker daemon unavailable. |
+| 56 | `uv --project ... sync --locked --offline --python ...` | `C:\Projects\NEXETL\backend` | Reproduce/check environment from lock state. | **PASS** | Ignored `.venv` checked; manifests unchanged. |
+| 57 | `cmd.exe /d /c "git check-ignore -v .env.local backend\.venv\"` | `C:\Projects\NEXETL` | Verify secret file and virtual environment are ignored. | **WARNING** | None; both matched `.gitignore`, with unrelated global-ignore warning. |
+| 58 | `cmd.exe /d /c "rg -n \"PipelineDefinition\|...\" backend\src backend\tests"` | `C:\Projects\NEXETL` | Check prohibited implementation terms using cmd. | **FAIL** | None; shell quoting treated alternation as commands. |
+| 59 | `cmd.exe /d /c "rg -n \"os\.environ\|os\.getenv\" backend\src backend\manage.py"` | `C:\Projects\NEXETL` | Check raw environment reads using cmd. | **FAIL** | None; shell quoting treated alternation as commands. |
+| 60 | `rg -n 'PipelineDefinition\|pipeline_definition\|APIView\|models\.Model\|RegisterPipelineDefinition\|InspectPipelineDefinition' backend\src backend\tests` | `C:\Projects\NEXETL` | Verify prohibited domain/API implementation is absent. | **PASS** | None; no matches (rg exit 1 is expected for this negative check). |
+| 61 | `rg -n 'os\.environ\|os\.getenv' backend\src backend\manage.py` | `C:\Projects\NEXETL` | Verify environment access is limited to bootstrap boundaries. | **PASS** | None; only manage/ASGI/WSGI settings selection and centralized configuration read matched. |
+| 62 | `uv --project ... pip list` | `C:\Projects\NEXETL\backend` | Capture exact installed package versions. | **PASS** | None |
+| 63 | `cmd.exe /d /c "dir /s /b backend\src docs\implementation"` | `C:\Projects\NEXETL` | Inventory the implemented backend skeleton and implementation documentation. | **PASS** | None |
+| 64 | `Get-Content` review of backend source, configuration tests, and implementation documents | `C:\Projects\NEXETL` | Review the completed slice and its evidence. | **PASS** | None |
+| 65 | `cmd.exe /d /c "git diff --check"` | `C:\Projects\NEXETL` | Check tracked changes for whitespace errors. | **PASS** | None; Git emitted line-ending warnings for pre-existing `.gitignore` and `README.md` changes. |
+| 66 | `cmd.exe /d /c "git status --short --branch"` | `C:\Projects\NEXETL` | Capture working-tree state. | **WARNING** | None; status completed with an inaccessible global-ignore warning and showed broad pre-existing/unrelated untracked work. |
+| 67 | `rg --files backend\src docs\implementation backend\tests\configuration` | `C:\Projects\NEXETL` | Enumerate slice source, tests, and implementation evidence. | **PASS** | None |
+| 68 | Recursive trailing-whitespace check over all files under the slice paths | `C:\Projects\NEXETL` | Check new text content for trailing whitespace. | **FAIL** | None; the command incorrectly scanned compiled `.pyc` files as text. |
+| 69 | Mandatory implementation-document existence check | `C:\Projects\NEXETL` | Verify all five required implementation documents exist. | **PASS** | None |
+| 70 | Text-only trailing-whitespace check excluding `__pycache__` | `C:\Projects\NEXETL` | Correct the scope of the whitespace audit. | **PASS** | None; `TEXT_WHITESPACE_OK`. |
+| 71 | `cmd.exe /d /c "powershell.exe -NoLogo -NoProfile -Command Get-Content ... -Tail 35"` | `C:\Projects\NEXETL` | Inspect the command-log tail through a nested shell. | **FAIL** | None; nested quoting was rejected by `cmd.exe`. |
+| 72 | `Get-Content -LiteralPath docs\implementation\COMMAND-LOG.md -Tail 45` | `C:\Projects\NEXETL` | Inspect the command-log tail directly. | **PASS** | None |
+| 73 | Two nested `cmd.exe /d /c` invocations for final Git checks | `C:\Projects\NEXETL` | Run final `git diff --check` and `git status --short --branch`. | **FAIL** | None; redundant nested quoting caused both invocations to be rejected before Git ran. |
+| 74 | `git diff --check` using `cmd.exe` as the direct shell | `C:\Projects\NEXETL` | Run the final tracked whitespace check without nested quoting. | **PASS** | None; only the known line-ending warnings were emitted. |
+| 75 | `git status --short --branch` using `cmd.exe` as the direct shell | `C:\Projects\NEXETL` | Capture the final working-tree summary without nested quoting. | **WARNING** | None; completed on `main`, with the inaccessible global-ignore warning and broad pre-existing/unrelated changes still present. |
+| 76 | Text-only trailing-whitespace check after command-log update | `C:\Projects\NEXETL` | Verify text sources and evidence after the final evidence edit. | **PASS** | None; `TEXT_WHITESPACE_OK`. |
+| 77 | Final `git diff --check` using `cmd.exe` as the direct shell | `C:\Projects\NEXETL` | Recheck tracked changes after the final evidence edit. | **PASS** | None; only the known line-ending warnings were emitted. |
+| 78 | Final `git status --short --branch` using `cmd.exe` as the direct shell | `C:\Projects\NEXETL` | Reconfirm the final working-tree state. | **WARNING** | None; completed on `main`, with the inaccessible global-ignore warning and broad pre-existing/unrelated changes still present. |
+| 79 | `git status --short`; branch/remote/log inspection | `C:\Projects\NEXETL` | Start controlled public-publication preflight. | **PASS** | None; initial branch was `main`, origin was absent, and all current changes were untracked or unstaged. |
+| 80 | `gh --version`; `winget --version` | `C:\Projects\NEXETL` | Check authorized GitHub CLI installation path. | **FAIL** | None; neither GitHub CLI nor winget is available in this environment. |
+| 81 | Read local mirror manifest and publication candidates | `C:\Projects\NEXETL` | Classify public-safe content and local governed-reference material. | **PASS** | None; local mirror is under categorized `docs/` directories rather than `docs/governed-baseline/`. |
+| 82 | Public-candidate secret/path scan and ignore verification | `C:\Projects\NEXETL` | Prevent credentials, user-specific paths, and governed baseline mirror content from entering the public repository. | **PASS** | Updated `.gitignore` and redacted two user-specific local interpreter paths from public-facing implementation documentation. |
+| 83 | `uv lock --check --offline`; `uv sync --locked --dry-run --offline` | `C:\Projects\NEXETL` | Run backend lock/sync pre-publication checks. | **WARNING** | None; checks are blocked because no Python 3.13 interpreter is discoverable and offline mode cannot download one. |
+| 84 | `npm ci --dry-run --ignore-scripts` | `C:\Projects\NEXETL\frontend` | Verify the frontend dependency lock without lifecycle scripts. | **PASS** | None |
+| 85 | `docker compose --env-file .env.example config --quiet` | `C:\Projects\NEXETL` | Verify public-safe local Compose configuration. | **WARNING** | None; validation passed with local Docker-config access warnings. |
+| 86 | `git remote add origin https://github.com/chathurindu96/NEXETL.git` | `C:\Projects\NEXETL` | Add the user-authorized origin after confirming none existed. | **PASS** | Updated local Git config only. |
+| 87 | `git fetch origin --prune`; `git ls-remote --heads origin` | `C:\Projects\NEXETL` | Inspect remote branches/history before publication. | **PASS** | None; origin had no branch heads, so no conflicting NEXETL history was found. |
+
+## Result conventions
+
+- **PASS**: command completed or a negative assertion returned the expected no-match result.
+- **FAIL**: command did not complete its intended check; the failure and any retry remain visible.
+- **WARNING**: the intended check completed but emitted an environmental warning.

@@ -1,0 +1,7 @@
+{
+  "name": "nexetl-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NEXETL frontend dependency boundary",
+  "packageManager": "npm@11.6.2"
+}

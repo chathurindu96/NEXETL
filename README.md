@@ -4,11 +4,13 @@ NEXETL is a next-generation extensible ETL and data integration platform.
 
 ## Project Status
 
-NEXETL is currently transitioning from governed architecture into
-detailed design and implementation planning.
+Gate 5 is open for Increment 1 — Pipeline Definition Registration and
+Inspection Foundation. Implementation is proceeding in the work-package order
+defined by `NEXETL-PLAN-001`.
 
-Production implementation must not begin until the applicable
-NEXETL implementation-readiness requirements are satisfied.
+This repository currently contains the WP-01 repository and development
+foundation only. It intentionally contains no WP-02-or-later business or
+application implementation.
 
 ## Technology Direction
 
@@ -34,6 +36,68 @@ reference material.
 
 Changes to local documentation do not automatically constitute an
 approved change to the controlled NEXETL baseline.
+
+## Repository Layout
+
+- `backend/` owns Python project metadata, the `uv` lockfile, and backend tests.
+- `frontend/` owns npm project metadata, the npm lockfile, and frontend tests.
+- `tests/e2e/` is the repository-level end-to-end test boundary; Playwright
+  dependencies will remain owned by the frontend boundary when introduced by
+  the authorized work package.
+- `compose.yaml` defines the local PostgreSQL dependency only.
+
+No root workspace package manager or monorepo orchestrator is used.
+
+## Prerequisites
+
+- Git
+- uv
+- Node.js and npm
+- Docker with Docker Compose
+
+The Python interpreter is managed through `uv`; a separate system Python is
+not required for the locked backend environment.
+
+## Initial Setup
+
+Create an untracked local environment file and replace every secret placeholder
+before starting PostgreSQL:
+
+```cmd
+copy .env.example .env.local
+```
+
+Install the locked backend and frontend dependency states independently:
+
+```cmd
+cd backend
+uv sync --locked
+cd ..\frontend
+npm ci
+cd ..
+```
+
+Start only the local PostgreSQL dependency:
+
+```cmd
+docker compose --env-file .env.local up -d postgres
+```
+
+Stop it without deleting the persistent developer volume:
+
+```cmd
+docker compose --env-file .env.local down
+```
+
+To validate the Compose model without starting services:
+
+```cmd
+docker compose --env-file .env.local config --quiet
+```
+
+Do not use `down --volumes` unless an intentional local database reset is
+required. Django, SvelteKit, migrations, and executable test commands are added
+only by their later authorized work packages.
 
 ## Development Governance
 

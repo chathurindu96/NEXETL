@@ -11,10 +11,12 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
 
 # Python environments
@@ -32,6 +34,20 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Local tool state
+.uv-cache/
+
+# Local governed-baseline mirror (Google Drive remains authoritative; do not publish)
+/docs/MANIFEST.md
+/docs/README.md
+/docs/Recovery-Evidence/
+/docs/adr/*.md
+/docs/architecture/*.md
+/docs/detailed-design/*.md
+/docs/governance/*.md
+/docs/planning/*.md
+/docs/product-requirements/*.md
 
 # Logs
 *.log
