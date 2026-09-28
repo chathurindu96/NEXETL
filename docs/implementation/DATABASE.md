@@ -131,10 +131,12 @@ Application schema must be created through governed Django migrations, not ad-ho
 nexetl_pipeline_definition(id uuid primary key)
 ```
 
-No application migration has been applied in this environment: the existing
-loopback PostgreSQL service rejected the configured `nexetl` credentials during
-the migration-history connection check. Correct local credentials are required
-before running `uv run python manage.py migrate`.
+No application migration has been applied in this environment. The NEXETL
+Compose container is healthy and its `nexetl` database is empty, but it is
+currently published on loopback port `5433` because another local process owns
+port `5432`. The host process has no `NEXETL_DB_PASSWORD` supplied. Set the
+private password used when the Compose volume was first initialized and set
+`NEXETL_DB_PORT=5433` before running `uv run python manage.py migrate`.
 
 ## Commands and queries executed in this slice
 

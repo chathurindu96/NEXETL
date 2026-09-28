@@ -18,7 +18,8 @@ API exposes only the governed `id` field.
 
 ## Infrastructure exception
 
-The repository's loopback PostgreSQL service is reachable but rejected the
-configured `nexetl` credentials. Therefore migration application and browser
-E2E were not claimed. Correct governed local credentials are the sole
-prerequisite for those checks.
+The NEXETL Compose database is reachable on `127.0.0.1:5433` and contains no
+application tables. The host process has no `NEXETL_DB_PASSWORD`; port `5432`
+is occupied by an unrelated local PostgreSQL process. Therefore migration
+application and browser E2E were not claimed. The private Compose database
+password and an explicit `NEXETL_DB_PORT=5433` are required for those checks.
