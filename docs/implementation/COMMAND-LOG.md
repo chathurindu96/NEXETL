@@ -101,6 +101,9 @@ This audit trail records every materially relevant terminal command executed dur
 | 95 | Combined controlled import/test command | `C:\Projects\NEXETL\backend` | Attempt NEX-101 ASGI/WSGI import and focused-test verification. | **FAIL** | The shell split the embedded Python command at semicolons; no repository content changed. The system check portion completed before the quoting failure. |
 | 96 | `uv run --offline pytest tests\configuration` | `C:\Projects\NEXETL\backend` | Capture the existing configuration-test baseline. | **PASS** | 18 tests passed. |
 | 97 | `uv run --offline pytest tests\bootstrap tests\configuration` | `C:\Projects\NEXETL\backend` | Verify the NEX-101 bootstrap import smoke test and existing configuration tests. | **PASS** | 19 tests passed. |
+| 98 | Read-only NEX-102 package and governed-design assessment | `C:\Projects\NEXETL` | Confirm the required `pipelines` Django-app/module mapping and narrow change radius before implementation. | **PASS** | DES-001 §6.1 requires one domain-aligned `pipelines` Django app with internal domain/application/infrastructure/API boundaries. |
+| 99 | Controlled `uv run --offline pytest tests\bootstrap\test_pipeline_package_boundaries.py` | `C:\Projects\NEXETL\backend` | Run focused NEX-102 package-boundary verification. | **FAIL** | One test lacked `DJANGO_SETTINGS_MODULE` before calling `django.setup()`; the structural checks themselves passed. No application code changed. |
+| 100 | Controlled `uv run --offline pytest tests\bootstrap\test_pipeline_package_boundaries.py`; `uv run --offline python manage.py check` | `C:\Projects\NEXETL\backend` | Re-run focused NEX-102 verification after correcting the test fixture. | **PASS** | Three structural tests passed and Django reported no system-check issues. Temporary process-only configuration values were used and are not recorded. |
 
 ## Result conventions
 

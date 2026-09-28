@@ -10,6 +10,10 @@ NEX-101 reassessed this existing shell rather than regenerating it. Its focused
 bootstrap-import verification and acceptance evidence are recorded in
 `docs/implementation/sprint-001/NEX-101-EVIDENCE.md`.
 
+NEX-102 adds the approved `pipelines` Django-app/package boundary only. Its
+layer mapping and focused structural verification are recorded in
+`docs/implementation/sprint-001/NEX-102-EVIDENCE.md`.
+
 ## Applicable requirements
 
 - NEXETL-REQ-095 — Secret Confidentiality
