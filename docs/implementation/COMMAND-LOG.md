@@ -96,6 +96,11 @@ This audit trail records every materially relevant terminal command executed dur
 | 90 | Three scoped `git commit` operations | `C:\Projects\NEXETL` | Create understandable publication commits. | **PASS** | Created `chore(repo): publish WP-01 development foundation`, `docs(diagrams): add governed architecture diagram set`, and `docs(agile): add NEXETL Scrum backlog and Sprint 1 plan`. |
 | 91 | `git push -u origin main` | `C:\Projects\NEXETL` | Publish the reviewed initial baseline to the verified-empty remote. | **PASS** | Normal new-branch push only; no force push or history rewrite. |
 | 92 | `git ls-remote origin refs/heads/main`; remote tree audit | `C:\Projects\NEXETL` | Verify remote head and public-publication exclusions. | **PASS** | Remote head matched local HEAD; no real environment file or local governed-baseline mirror document was published. |
+| 93 | `uv lock --check --offline --python <local Python 3.13>`; `uv sync --locked --dry-run --offline --python <local Python 3.13>` | `C:\Projects\NEXETL\backend` | Verify the committed backend lock and a no-change locked synchronization for NEX-101. | **PASS** | 16 packages resolved; 15 packages checked; dry run would make no changes. |
+| 94 | Controlled `uv run --offline python manage.py check` | `C:\Projects\NEXETL\backend` | Verify Django initialization and framework system checks for NEX-101. | **PASS** | `System check identified no issues (0 silenced).` Temporary process-only configuration values were used and are not recorded. |
+| 95 | Combined controlled import/test command | `C:\Projects\NEXETL\backend` | Attempt NEX-101 ASGI/WSGI import and focused-test verification. | **FAIL** | The shell split the embedded Python command at semicolons; no repository content changed. The system check portion completed before the quoting failure. |
+| 96 | `uv run --offline pytest tests\configuration` | `C:\Projects\NEXETL\backend` | Capture the existing configuration-test baseline. | **PASS** | 18 tests passed. |
+| 97 | `uv run --offline pytest tests\bootstrap tests\configuration` | `C:\Projects\NEXETL\backend` | Verify the NEX-101 bootstrap import smoke test and existing configuration tests. | **PASS** | 19 tests passed. |
 
 ## Result conventions
 

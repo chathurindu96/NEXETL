@@ -6,6 +6,10 @@ This slice implements the minimum Django/DRF bootstrap, centralized validated se
 
 It does not complete all of WP-02 and does not begin a later domain, persistence, security, API, or frontend slice.
 
+NEX-101 reassessed this existing shell rather than regenerating it. Its focused
+bootstrap-import verification and acceptance evidence are recorded in
+`docs/implementation/sprint-001/NEX-101-EVIDENCE.md`.
+
 ## Applicable requirements
 
 - NEXETL-REQ-095 — Secret Confidentiality
