@@ -2,11 +2,11 @@
 
 from pathlib import Path
 
-from nexetl.configuration import load_backend_configuration
+from nexetl.configuration import load_backend_configuration, validate_backend_configuration
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-CONFIGURATION = load_backend_configuration()
+CONFIGURATION = validate_backend_configuration(load_backend_configuration())
 
 SECRET_KEY = CONFIGURATION.secret_key
 DEBUG = CONFIGURATION.debug

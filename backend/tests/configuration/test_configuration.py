@@ -2,13 +2,30 @@
 
 import os
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
-from nexetl.configuration import load_backend_configuration
+from nexetl.configuration import (
+    ConfigurationError,
+    load_backend_configuration,
+    validate_backend_configuration,
+)
 
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _complete_values() -> dict[str, str]:
+    return {
+        "NEXETL_DJANGO_SECRET_KEY": "test-only-secret-key",
+        "NEXETL_DB_PASSWORD": "test-only-database-password",
+    }
+
+
+def _validated_configuration(values: dict[str, str]):
+    return validate_backend_configuration(load_backend_configuration(values))
 
 
 def test_safe_defaults_are_resolved_without_secret_fallbacks() -> None:
@@ -116,3 +133,121 @@ def test_raw_process_environment_access_is_centralized() -> None:
     }
 
     assert files_with_environment_access == {"nexetl/configuration.py"}
+
+
+@pytest.mark.parametrize("name", ["NEXETL_DJANGO_SECRET_KEY", "NEXETL_DB_PASSWORD"])
+@pytest.mark.parametrize("value", [None, "", "   "])
+def test_required_secrets_are_rejected_without_leaking_values(
+    name: str, value: str | None
+) -> None:
+    values = _complete_values()
+    if value is None:
+        del values[name]
+    else:
+        values[name] = value
+
+    with pytest.raises(ConfigurationError, match=name) as error:
+        _validated_configuration(values)
+
+    assert "test-only-secret" not in str(error.value)
+    assert "test-only-database-password" not in repr(error.value)
+
+
+@pytest.mark.parametrize(
+    ("name", "placeholder"),
+    [
+        ("NEXETL_DJANGO_SECRET_KEY", "replace-with-a-local-secret"),
+        ("NEXETL_DB_PASSWORD", "replace-with-a-local-password"),
+        ("NEXETL_DJANGO_SECRET_KEY", "YOUR_PRIVATE_LOCAL_SECRET"),
+    ],
+)
+def test_documented_secret_placeholders_are_rejected_safely(
+    name: str, placeholder: str
+) -> None:
+    values = _complete_values() | {name: placeholder}
+
+    with pytest.raises(ConfigurationError, match=name) as error:
+        _validated_configuration(values)
+
+    assert placeholder not in str(error.value)
+    assert placeholder not in repr(error.value)
+
+
+@pytest.mark.parametrize("name", ["NEXETL_DB_NAME", "NEXETL_DB_USER", "NEXETL_DB_HOST"])
+@pytest.mark.parametrize("value", ["", "   "])
+def test_database_text_values_reject_explicit_empty_overrides(
+    name: str, value: str
+) -> None:
+    with pytest.raises(ConfigurationError, match=name):
+        _validated_configuration(_complete_values() | {name: value})
+
+
+@pytest.mark.parametrize("value", ["not-a-port", "0", "65536"])
+def test_invalid_database_port_has_a_controlled_failure(value: str) -> None:
+    with pytest.raises(ConfigurationError, match="NEXETL_DB_PORT"):
+        _validated_configuration(_complete_values() | {"NEXETL_DB_PORT": value})
+
+
+@pytest.mark.parametrize("value", ["1", "65535"])
+def test_database_port_boundary_values_are_valid(value: str) -> None:
+    configuration = _validated_configuration(
+        _complete_values() | {"NEXETL_DB_PORT": value}
+    )
+
+    assert configuration.database.port == int(value)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "NEXETL_DJANGO_DEBUG",
+        "NEXETL_SESSION_COOKIE_SECURE",
+        "NEXETL_CSRF_COOKIE_SECURE",
+    ],
+)
+@pytest.mark.parametrize("value", ["yes", "no", "1", "0", "on", "off"])
+def test_invalid_boolean_has_a_controlled_failure(name: str, value: str) -> None:
+    with pytest.raises(ConfigurationError, match=name):
+        load_backend_configuration(_complete_values() | {name: value})
+
+
+@pytest.mark.parametrize("value", ["", "   ", ",,", " , , "])
+def test_allowed_hosts_must_resolve_to_a_non_empty_list(value: str) -> None:
+    with pytest.raises(ConfigurationError, match="NEXETL_ALLOWED_HOSTS"):
+        _validated_configuration(_complete_values() | {"NEXETL_ALLOWED_HOSTS": value})
+
+
+def test_complete_configuration_validates_deterministically() -> None:
+    configuration = _validated_configuration(
+        _complete_values()
+        | {
+            "NEXETL_DJANGO_DEBUG": "false",
+            "NEXETL_ALLOWED_HOSTS": "localhost,127.0.0.1",
+            "NEXETL_SESSION_COOKIE_SECURE": "true",
+            "NEXETL_CSRF_COOKIE_SECURE": "true",
+        }
+    )
+
+    assert configuration.secret_key == "test-only-secret-key"
+    assert configuration.database.password == "test-only-database-password"
+
+
+def test_invalid_configuration_prevents_django_system_check_without_secret_leak() -> None:
+    environment = os.environ.copy()
+    environment.update(_complete_values())
+    environment["NEXETL_DJANGO_SECRET_KEY"] = "replace-with-a-local-secret"
+
+    result = subprocess.run(
+        [sys.executable, "manage.py", "check"],
+        cwd=BACKEND_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    output = result.stdout + result.stderr
+
+    assert result.returncode != 0
+    assert "NEXETL_DJANGO_SECRET_KEY" in output
+    assert "replace-with-a-local-secret" not in output

@@ -35,7 +35,7 @@ Choose private values for both required secret variables. Do not use the placeho
 
 Expected behavior:
 
-Subsequent Django commands resolve typed values once when settings load. NEX-106 will add deployment-validity and fail-fast validation behavior.
+Subsequent Django commands resolve and validate values once when settings load. Invalid governed configuration prevents Django startup before readiness; secret values are intentionally omitted from diagnostics.
 
 ## Synchronize the locked backend environment
 
@@ -120,6 +120,17 @@ Expected output:
 ```text
 System check identified no issues (0 silenced).
 ```
+
+## Safe invalid-configuration example
+
+With a required secret omitted, the same system-check command exits non-zero
+and reports the affected setting, for example:
+
+```text
+NEXETL_DJANGO_SECRET_KEY must be supplied with a non-placeholder value
+```
+
+The diagnostic never prints the supplied secret value or the full environment.
 
 ## Verify Django database connectivity
 

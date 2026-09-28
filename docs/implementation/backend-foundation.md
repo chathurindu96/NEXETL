@@ -26,6 +26,10 @@ NEX-105 centralizes process-environment configuration resolution and removes
 the unapproved local dotenv-loading behavior. Its boundary and verification
 evidence are recorded in `docs/implementation/sprint-001/NEX-105-EVIDENCE.md`.
 
+NEX-106 validates resolved backend configuration before Django readiness with
+a single protected diagnostic type. Its validation and startup evidence are
+recorded in `docs/implementation/sprint-001/NEX-106-EVIDENCE.md`.
+
 ## Applicable requirements
 
 - NEXETL-REQ-095 — Secret Confidentiality
@@ -57,8 +61,9 @@ Applicable Accepted ADRs are ADR-001 (Core Monorepo), ADR-002 (uv and committed 
 ## Settings and configuration structure
 
 - `nexetl.configuration` is the only raw backend environment-reading boundary.
-- `nexetl.settings` maps resolved typed values into Django settings.
-- Required secrets have no fallback; NEX-106 owns their startup validation.
+- `nexetl.settings` maps centrally validated typed values into Django settings.
+- Required secrets have no fallback and fail startup safely when absent, blank,
+  or a known documentation placeholder.
 - Non-secret local defaults are exactly those established by DES-001.
 - Explicit environment values override safe documented defaults per ADR-006.
 - Secure cookie defaults are `true` and are independent of debug mode.
