@@ -11,9 +11,13 @@ This slice configures Django for the existing WP-01 PostgreSQL service. It does 
 | Application database user | `NEXETL_DB_USER`, local default `nexetl` | Non-secret |
 | Password | `NEXETL_DB_PASSWORD`, required with no default | Secret |
 | Host | `NEXETL_DB_HOST`, local default `127.0.0.1` | Non-secret |
-| Port | `NEXETL_DB_PORT`, local default `5432`, integer 1–65535 | Non-secret |
+| Port | `NEXETL_DB_PORT`, local default `5432`, resolved as an integer | Non-secret |
 
-The existing Compose service maps PostgreSQL to loopback only. Django receives resolved values through process environment and the centralized `nexetl.configuration` boundary.
+The existing Compose service maps PostgreSQL to loopback only. Django receives
+resolved values through the process environment and the centralized
+`nexetl.configuration` boundary; it does not load `.env` files. NEX-105 only
+resolves database configuration. It does not start PostgreSQL, connect to it,
+execute SQL, run migrations, or change schema.
 
 ## Validate the Compose definition
 

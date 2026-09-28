@@ -1,10 +1,9 @@
 """ASGI entry point for the NEXETL Django application."""
 
-import os
-
 from django.core.asgi import get_asgi_application
+from nexetl.configuration import configure_django_settings_module
 
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nexetl.settings")
+configure_django_settings_module()
 
 application = get_asgi_application()

@@ -2,7 +2,7 @@
 
 ## Scope and result
 
-This slice implements the minimum Django/DRF bootstrap, centralized validated settings resolution, PostgreSQL connection configuration, dependency lock state, and focused configuration verification required to begin PLAN-001 WP-02 safely.
+This slice implements the minimum Django/DRF bootstrap, centralized settings resolution, PostgreSQL connection configuration, dependency lock state, and focused configuration verification required to begin PLAN-001 WP-02 safely.
 
 It does not complete all of WP-02 and does not begin a later domain, persistence, security, API, or frontend slice.
 
@@ -21,6 +21,10 @@ inventory and negative-route verification are recorded in
 NEX-104 adds repeatable AST-based dependency-direction and cycle verification
 in the test boundary only. Its controlled violation proof and full-suite
 evidence are recorded in `docs/implementation/sprint-001/NEX-104-EVIDENCE.md`.
+
+NEX-105 centralizes process-environment configuration resolution and removes
+the unapproved local dotenv-loading behavior. Its boundary and verification
+evidence are recorded in `docs/implementation/sprint-001/NEX-105-EVIDENCE.md`.
 
 ## Applicable requirements
 
@@ -53,11 +57,11 @@ Applicable Accepted ADRs are ADR-001 (Core Monorepo), ADR-002 (uv and committed 
 ## Settings and configuration structure
 
 - `nexetl.configuration` is the only raw backend environment-reading boundary.
-- `nexetl.settings` converts validated values into Django settings.
-- Required secrets have no fallback and known `.env.example` placeholders are rejected.
+- `nexetl.settings` maps resolved typed values into Django settings.
+- Required secrets have no fallback; NEX-106 owns their startup validation.
 - Non-secret local defaults are exactly those established by DES-001.
 - Explicit environment values override safe documented defaults per ADR-006.
-- Secure cookie defaults are `true`; local HTTP must explicitly set both flags to `false`.
+- Secure cookie defaults are `true` and are independent of debug mode.
 - Bootstrap configuration is process-lifetime stable; no hot reload or runtime override mechanism exists.
 - No dotenv/configuration framework or secret-provider product was introduced.
 
@@ -83,9 +87,13 @@ What it does not do: it has no import-time wiring or hidden behavior.
 
 Why it exists: implements ADR-006's centralized startup-resolution boundary in a small testable module.
 
-What it does: validates required secrets, safe defaults, explicit overrides, host lists, strict booleans, and the PostgreSQL port. Secret fields are excluded from representations.
+What it does: resolves process-environment values, safe defaults, typed booleans,
+host lists, and the PostgreSQL port. Secret fields are excluded from
+representations.
 
-What it does not do: it does not read files, contact a secret manager, introduce universal precedence, support hot reload, or expose values to the frontend.
+What it does not do: it does not load local files, validate deployment
+semantics, contact a secret manager, introduce universal precedence, support
+hot reload, or expose values to the frontend.
 
 ### `backend/src/nexetl/settings.py`
 

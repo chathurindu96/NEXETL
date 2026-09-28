@@ -1,6 +1,6 @@
 # Backend Foundation Run Commands
 
-All commands are Windows `cmd.exe` compatible. Secret examples are placeholders for local use only; choose private values and never commit them.
+All commands are Windows `cmd.exe` compatible. Secret examples are placeholders for local use only; choose private values and never commit them. NEXETL reads configuration from the process or deployment environment only; it does not automatically load `.env` files.
 
 ## Set backend process configuration
 
@@ -27,7 +27,7 @@ set NEXETL_CSRF_COOKIE_SECURE=false
 
 Purpose:
 
-Supplies the process-lifetime bootstrap values defined by DES-001. Local HTTP requires explicit `false` secure-cookie overrides; those values are never inferred from debug mode.
+Supplies the process-lifetime bootstrap values defined by DES-001. Secure-cookie values are never inferred from debug mode; local HTTP requires explicit `false` overrides.
 
 Prerequisite:
 
@@ -35,7 +35,7 @@ Choose private values for both required secret variables. Do not use the placeho
 
 Expected behavior:
 
-Subsequent Django commands resolve and validate these values once when settings load.
+Subsequent Django commands resolve typed values once when settings load. NEX-106 will add deployment-validity and fail-fast validation behavior.
 
 ## Synchronize the locked backend environment
 
@@ -111,7 +111,7 @@ Command:
 uv run python manage.py check
 ```
 
-Purpose: Load validated settings, populate the Django/DRF bootstrap, and run framework system checks.
+Purpose: Load resolved settings, populate the Django/DRF bootstrap, and run framework system checks.
 
 Prerequisite: backend process configuration is set. PostgreSQL need not be running for this configuration-only check.
 
@@ -147,7 +147,7 @@ Command:
 uv run pytest
 ```
 
-Purpose: Verify deterministic configuration defaults, overrides, required secrets, strict booleans, port validation, and secret-safe representations.
+Purpose: Verify deterministic configuration defaults, overrides, typing, absence of secret fallbacks, configuration-boundary ownership, and secret-safe representations.
 
 Prerequisite: locked backend environment is synchronized.
 
