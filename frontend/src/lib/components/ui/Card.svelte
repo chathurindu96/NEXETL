@@ -1,0 +1,3 @@
+<script lang="ts">let { title, description, children }: { title?: string; description?: string; children?: import('svelte').Snippet } = $props();</script>
+<section class="card">{#if title}<header><h2>{title}</h2>{#if description}<p>{description}</p>{/if}</header>{/if}<div class="body">{@render children?.()}</div></section>
+<style>.card{max-width:42rem;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)}header{padding:var(--space-5) var(--space-5) 0}h2{margin:0;font-size:1rem}p{margin:var(--space-2) 0 0;color:var(--color-text-muted)}.body{padding:var(--space-5)}</style>

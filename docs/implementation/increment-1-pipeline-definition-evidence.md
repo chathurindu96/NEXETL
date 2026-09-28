@@ -31,3 +31,11 @@ The backend root returns a safe non-business service index, and the frontend
 root routes users to registration. SvelteKit provides a friendly unknown-route
 page and a local favicon. Backend request logs include only method, path,
 status, and duration; API exceptions remain externally sanitized.
+
+## Frontend visual foundation
+
+The frontend now has a tokenized global style entry point, responsive application
+shell, sidebar/top bar, and small shared UI primitives for buttons, cards,
+alerts, page headers, and loading states. The live registration and unknown-route
+views were visually reviewed as a professional Increment 1 design-system
+baseline. No product capability or browser authentication behavior was added.

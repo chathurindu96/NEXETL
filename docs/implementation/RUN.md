@@ -215,6 +215,10 @@ The frontend root (`/`) redirects through SvelteKit navigation to
 `/pipelines/new`. Unknown browser routes show a friendly error page, and the
 local `/favicon.svg` prevents a normal-workflow favicon 404.
 
+The frontend visual foundation is loaded by `src/routes/+layout.svelte` from
+`src/app.css`. It uses semantic CSS tokens, a responsive shell, and local shared
+components only; no external font or UI-framework download is required.
+
 ## Stop the Django development server
 
 In the terminal running Django, press:

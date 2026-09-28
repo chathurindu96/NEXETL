@@ -1,0 +1,3 @@
+<script lang="ts">let { title, description, children }: { title: string; description?: string; children?: import('svelte').Snippet } = $props();</script>
+<header class="page-header"><div><h1>{title}</h1>{#if description}<p>{description}</p>{/if}</div>{#if children}<div class="actions">{@render children()}</div>{/if}</header>
+<style>.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-6)}h1{margin:0;font-size:1.5rem;line-height:1.25;letter-spacing:-.02em}p{max-width:45rem;margin:var(--space-2) 0 0;color:var(--color-text-muted)}.actions{flex:none}</style>

@@ -1,0 +1,3 @@
+<script lang="ts">let { variant = 'info', children }: { variant?: 'info' | 'success' | 'warning' | 'error'; children?: import('svelte').Snippet } = $props();</script>
+<div class="alert {variant}" role={variant === 'error' ? 'alert' : 'status'}>{@render children?.()}</div>
+<style>.alert{max-width:42rem;border:1px solid;padding:.75rem 1rem;border-radius:var(--radius-sm);font-size:.9rem}.info{background:#eff8ff;border-color:#b2ddff;color:#175cd3}.success{background:#ecfdf3;border-color:#abefc6;color:#067647}.warning{background:#fffaeb;border-color:#fedf89;color:#b54708}.error{background:#fef3f2;border-color:#fecdca;color:#b42318}</style>
