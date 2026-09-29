@@ -14,6 +14,13 @@ test('uses the real Django session for login, Pipeline registration, inspection,
   await expect(page).toHaveURL(/\/pipelines\/new$/);
   await expect(page.getByRole('main')).toContainText('Create Pipeline Definition');
   await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeVisible();
+  await page.getByRole('button', { name: 'Collapse navigation' }).click();
+  await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
+  await expect(page.getByText('New Pipeline', { exact: true })).not.toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
+  await page.getByRole('button', { name: 'Expand navigation' }).click();
+  await expect(page.getByText('New Pipeline', { exact: true })).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations.filter((violation) => violation.impact === 'critical')).toEqual([]);
 
   await page.getByRole('button', { name: 'Create Pipeline Definition' }).click();
