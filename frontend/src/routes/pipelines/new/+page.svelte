@@ -1,22 +1,11 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { bootstrapCsrf, pipelineErrorMessage, registerPipelineDefinition, type NexetlError } from '$lib/api/pipelines';
-  import Alert from '$lib/components/ui/Alert.svelte';
-  import Button from '$lib/components/ui/Button.svelte';
-  import PageHeader from '$lib/components/ui/PageHeader.svelte';
-  import { clearSession } from '$lib/session';
-  let pending = $state(false);
-  let message = $state('');
-  async function register() {
-    pending = true; message = '';
-    try { await bootstrapCsrf(); await goto(`/pipelines/${await registerPipelineDefinition()}`); }
-    catch (error) { const failure = error as NexetlError; if (failure.code === 'NEXETL_AUTHENTICATION_REQUIRED') { clearSession(); await goto('/login?next=/pipelines/new'); return; } message = pipelineErrorMessage(failure); }
-    finally { pending = false; }
-  }
+  import { goto } from '$app/navigation'; import { pipelineErrorMessage, registerPipelineDefinition, type NexetlError } from '$lib/api/pipelines';
+  import PageHeader from '$lib/components/ui/PageHeader.svelte'; import Button from '$lib/components/ui/Button.svelte'; import Alert from '$lib/components/ui/Alert.svelte';
+  let name = $state(''), description = $state(''), pending = $state(false), error = $state(''), nameError = $state(''), descriptionError = $state('');
+  function validate() { nameError = !name.trim() ? 'Pipeline name is required.' : name.trim().length > 120 ? 'Pipeline name must be at most 120 characters.' : ''; descriptionError = description.length > 1000 ? 'Description must be at most 1000 characters.' : ''; return !nameError && !descriptionError; }
+  async function submit() { if (!validate()) return; pending = true; error = ''; try { const definition = await registerPipelineDefinition(name.trim(), description.trim()); await goto(`/pipelines/${definition.id}`); } catch (failure) { error = pipelineErrorMessage(failure as NexetlError); } finally { pending = false; } }
 </script>
-
-<div class="breadcrumb">Pipelines / Create</div>
-<PageHeader title="Create Pipeline Definition" description="Create an identity for a new Pipeline Definition." />
-<section class="action-section" aria-labelledby="pipeline-definition-action"><div><h2 id="pipeline-definition-action">Pipeline definition</h2><p>NEXETL generates an immutable identifier automatically.</p></div><Button onclick={register} loading={pending}>Create Pipeline Definition</Button></section>
-{#if message}<div class="message"><Alert variant={message.includes('authorized') ? 'warning' : 'error'}>{message} An authenticated session is required for protected operations.</Alert></div>{/if}
-<style>.breadcrumb{margin-bottom:var(--space-3);color:var(--text-muted);font-size:.8125rem;font-weight:500}.action-section{display:flex;align-items:center;justify-content:space-between;gap:var(--space-5);max-width:46rem;border-top:1px solid var(--border-default);border-bottom:1px solid var(--border-default);padding:var(--space-5) 0}.action-section h2{margin:0;font-size:1.125rem;font-weight:600}.action-section p{margin:var(--space-1) 0 0;color:var(--text-secondary);font-size:.875rem}.message{margin-top:var(--space-4)}@media(max-width:600px){.action-section{align-items:flex-start;flex-direction:column}}</style>
+<svelte:head><title>New Pipeline | NEXETL</title></svelte:head>
+<PageHeader title="New Pipeline" description="Create a Pipeline Definition to begin authoring a data flow." />
+<form onsubmit={(event) => { event.preventDefault(); void submit(); }} novalidate><label for="name">Pipeline name <span aria-hidden="true">*</span></label><input id="name" bind:value={name} maxlength="120" autocomplete="off" aria-invalid={Boolean(nameError)} aria-describedby="name-help" onblur={validate}/><small id="name-help">{name.length}/120{nameError ? ` — ${nameError}` : ''}</small><label for="description">Description</label><textarea id="description" bind:value={description} maxlength="1000" aria-invalid={Boolean(descriptionError)} aria-describedby="description-help" onblur={validate}></textarea><small id="description-help">{description.length}/1000{descriptionError ? ` — ${descriptionError}` : ''}</small>{#if error}<Alert variant="error">{error}</Alert>{/if}<div class="actions"><Button variant="secondary" onclick={() => goto('/pipelines')}>Cancel</Button><Button type="submit" loading={pending}>Create pipeline</Button></div></form>
+<style>form{display:grid;gap:var(--space-2);max-width:42rem;border-top:1px solid var(--border-default);padding-top:var(--space-5)}label{margin-top:var(--space-3);font-weight:600}input,textarea{width:100%;border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:.6rem;font:inherit}textarea{min-height:8rem;resize:vertical}small{color:var(--text-muted)}.actions{display:flex;justify-content:flex-end;gap:var(--space-2);margin-top:var(--space-4)}</style>

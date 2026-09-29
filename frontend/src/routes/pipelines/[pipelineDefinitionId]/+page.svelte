@@ -1,33 +1,13 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { page } from '$app/state';
-  import { getPipelineDefinition, pipelineErrorMessage, type NexetlError } from '$lib/api/pipelines';
-  import { clearSession } from '$lib/session';
-  import Alert from '$lib/components/ui/Alert.svelte'; import LoadingState from '$lib/components/ui/LoadingState.svelte'; import PageHeader from '$lib/components/ui/PageHeader.svelte';
-  let id = $state('');
-  let message = $state('');
-  let loading = $state(true);
-  $effect(() => { void load(page.params.pipelineDefinitionId ?? ''); });
-  async function load(value: string) {
-    loading = true; message = '';
-    try {
-      if (!value) throw new Error('A Pipeline Definition identifier is required.');
-      id = await getPipelineDefinition(value);
-    }
-    catch (error) {
-      const failure = error as NexetlError;
-      if (failure.code === 'NEXETL_AUTHENTICATION_REQUIRED') {
-        clearSession();
-        await goto(`/login?next=${encodeURIComponent(page.url.pathname)}`);
-        return;
-      }
-      message = pipelineErrorMessage(failure);
-    }
-    finally { loading = false; }
-  }
+  import { goto } from '$app/navigation'; import { page } from '$app/state';
+  import { archivePipelineDefinition, getPipelineDefinition, pipelineErrorMessage, updatePipelineDefinition, type NexetlError, type PipelineDefinition } from '$lib/api/pipelines'; import { formatTimestamp } from '$lib/format';
+  import Alert from '$lib/components/ui/Alert.svelte'; import LoadingState from '$lib/components/ui/LoadingState.svelte'; import PageHeader from '$lib/components/ui/PageHeader.svelte'; import Button from '$lib/components/ui/Button.svelte'; import StatusBadge from '$lib/components/ui/StatusBadge.svelte'; import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
+  let definition = $state<PipelineDefinition | null>(null), message = $state(''), loading = $state(true), editing = $state(false), name = $state(''), description = $state(''), pending = $state(false), confirming = $state(false);
+  $effect(() => { const id = page.params.pipelineDefinitionId; if (id) void load(id); });
+  async function load(id: string) { loading = true; message = ''; try { definition = await getPipelineDefinition(id); name = definition.name; description = definition.description; } catch (failure) { const error = failure as NexetlError; message = pipelineErrorMessage(error); if (error.code === 'NEXETL_AUTHENTICATION_REQUIRED') await goto(`/login?next=${encodeURIComponent(page.url.pathname)}`); } finally { loading = false; } }
+  async function save() { if (!definition || !name.trim() || name.trim().length > 120 || description.length > 1000) { message = 'Please review the information and try again.'; return; } pending = true; try { definition = await updatePipelineDefinition(definition.id, name.trim(), description.trim()); editing = false; } catch (failure) { message = pipelineErrorMessage(failure as NexetlError); } finally { pending = false; } }
+  async function archive() { if (!definition) return; pending = true; try { definition = await archivePipelineDefinition(definition.id); confirming = false; } catch (failure) { message = pipelineErrorMessage(failure as NexetlError); } finally { pending = false; } }
 </script>
-
-<div class="breadcrumb">Pipelines / {id ? id.slice(0, 8) : 'Inspect'}</div>
-<PageHeader title="Pipeline Definition" description="Inspect the registered identity for this Pipeline Definition." />
-{#if loading}<LoadingState />{:else if message}<Alert variant={message.includes('not found') ? 'warning' : 'error'}>{message}</Alert>{:else}<section class="details" aria-label="Pipeline Definition details"><span>Identifier</span><code>{id}</code></section>{/if}
-<style>.breadcrumb{margin-bottom:var(--space-3);color:var(--text-muted);font-size:.8125rem;font-weight:500}.details{max-width:46rem;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);padding:var(--space-5)}.details span{display:block;color:var(--text-muted);font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.details code{display:block;margin-top:var(--space-2);overflow-wrap:anywhere;color:var(--text-primary);font-family:var(--font-mono);font-size:.9rem;user-select:all}</style>
+<svelte:head><title>{definition?.name ?? 'Pipeline'} | NEXETL</title></svelte:head>
+{#if loading}<LoadingState />{:else if message && !definition}<Alert variant="error">{message}</Alert>{:else if definition}<PageHeader title={definition.name} description="Pipeline Definition details." />{#if message}<Alert variant="error">{message}</Alert>{/if}<section class="actions">{#if definition.state === 'DRAFT'}<Button variant="secondary" onclick={() => editing = !editing}>{editing ? 'Cancel edit' : 'Edit'}</Button><Button variant="danger" onclick={() => confirming = true}>Archive</Button>{/if}</section>{#if definition.state === 'ARCHIVED'}<Alert variant="info">Archived Pipeline Definitions are read-only.</Alert>{/if}{#if editing}<form onsubmit={(event) => { event.preventDefault(); void save(); }}><label>Pipeline name <input bind:value={name} maxlength="120" required /></label><label>Description <textarea bind:value={description} maxlength="1000"></textarea></label><Button type="submit" loading={pending}>Save changes</Button></form>{/if}<dl><div><dt>State</dt><dd><StatusBadge state={definition.state}/></dd></div><div><dt>Description</dt><dd>{definition.description || 'No description'}</dd></div><div><dt>Pipeline Definition ID</dt><dd><code>{definition.id}</code></dd></div><div><dt>Created</dt><dd>{formatTimestamp(definition.createdAt)}</dd></div><div><dt>Updated</dt><dd>{formatTimestamp(definition.updatedAt)}</dd></div></dl><ConfirmDialog open={confirming} title="Archive Pipeline?" message="Archived Pipeline Definitions remain available for inspection but cannot be edited." pending={pending} onconfirm={archive} oncancel={() => confirming = false}/>{/if}
+<style>.actions{display:flex;justify-content:flex-end;gap:var(--space-2);margin:-5rem 0 var(--space-5)}form{display:grid;gap:var(--space-3);max-width:44rem;border-block:1px solid var(--border-default);padding:var(--space-4) 0}label{display:grid;gap:.35rem;font-weight:600}input,textarea{border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:.55rem;font:inherit}textarea{min-height:6rem}dl{max-width:48rem;border-top:1px solid var(--border-default);margin:var(--space-5) 0}dl div{display:grid;grid-template-columns:11rem 1fr;gap:var(--space-4);border-bottom:1px solid var(--border-default);padding:var(--space-3) 0}dt{color:var(--text-muted)}dd{margin:0}code{font-family:var(--font-mono);overflow-wrap:anywhere}@media(max-width:600px){.actions{margin:0 0 var(--space-4)}dl div{grid-template-columns:1fr;gap:.25rem}}</style>
