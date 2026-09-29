@@ -1,20 +1,40 @@
 <script lang="ts">
-  import type { PipelineDesignEdge, PipelineDesignNode } from '$lib/api/pipelines';
-  import CanvasControls from './CanvasControls.svelte'; import PipelineEdgeLayer from './PipelineEdgeLayer.svelte'; import PipelineNode from './PipelineNode.svelte'; import Icon from '$lib/components/ui/Icon.svelte';
-  let { nodes, edges, selectedNodeId, selectedEdgeId, readonly, fitRequest, onSelectNode, onSelectEdge, onMoveNode }: { nodes: PipelineDesignNode[]; edges: PipelineDesignEdge[]; selectedNodeId: string | null; selectedEdgeId: string | null; readonly: boolean; fitRequest: number; onSelectNode: (id: string) => void; onSelectEdge: (id: string) => void; onMoveNode: (id: string, x: number, y: number) => void } = $props();
-  let viewport: HTMLElement; let scale=$state(1), offsetX=$state(0), offsetY=$state(0);
-  function zoom(delta:number){scale=Math.min(1.5,Math.max(.55,scale+delta))}
-  function fit(){if(!viewport||!nodes.length){scale=1;offsetX=0;offsetY=0;return}const minX=Math.min(...nodes.map(n=>n.positionX)),minY=Math.min(...nodes.map(n=>n.positionY)),maxX=Math.max(...nodes.map(n=>n.positionX+208)),maxY=Math.max(...nodes.map(n=>n.positionY+84));const padding=80;scale=Math.min(1,Math.max(.55,Math.min((viewport.clientWidth-padding)/(maxX-minX),(viewport.clientHeight-padding)/(maxY-minY))));offsetX=(viewport.clientWidth-(maxX-minX)*scale)/2-minX*scale;offsetY=(viewport.clientHeight-(maxY-minY)*scale)/2-minY*scale}
-  $effect(()=>{fitRequest;if(viewport)fit()});
-  function startDrag(event:PointerEvent,node:PipelineDesignNode){onSelectNode(node.id);if(readonly||event.button!==0)return;event.preventDefault();const target=event.currentTarget as HTMLElement;target.setPointerCapture(event.pointerId);const sx=event.clientX,sy=event.clientY,ox=node.positionX,oy=node.positionY;const move=(e:PointerEvent)=>onMoveNode(node.id,Math.max(16,ox+(e.clientX-sx)/scale),Math.max(16,oy+(e.clientY-sy)/scale));const done=()=>{target.removeEventListener('pointermove',move);target.removeEventListener('pointerup',done);target.removeEventListener('pointercancel',done)};target.addEventListener('pointermove',move);target.addEventListener('pointerup',done);target.addEventListener('pointercancel',done)}
+  import '@xyflow/svelte/dist/style.css';
+  import { Background, BackgroundVariant, Controls, SvelteFlow, useSvelteFlow, type Connection } from '@xyflow/svelte';
+  import Icon from '$lib/components/ui/Icon.svelte';
+  import type { PipelineFlowEdge, PipelineFlowNode } from '$lib/designer/graph-model';
+  import PipelineNode from './PipelineNode.svelte';
+
+  let { nodes = $bindable(), edges = $bindable(), readonly, fitRequest, connectionMessage, onselectnode, onselectedge, onclear, onbeforeconnect, onconnected, ondragstop, ondelete }: {
+    nodes: PipelineFlowNode[]; edges: PipelineFlowEdge[]; readonly: boolean; fitRequest: number; connectionMessage: string;
+    onselectnode:(id:string)=>void; onselectedge:(id:string)=>void; onclear:()=>void;
+    onbeforeconnect:(connection:Connection)=>PipelineFlowEdge|false; onconnected:()=>void; ondragstop:()=>void; ondelete:(nodes:PipelineFlowNode[],edges:PipelineFlowEdge[])=>void;
+  } = $props();
+  const nodeTypes = { pipeline: PipelineNode };
+  const { fitView } = useSvelteFlow<PipelineFlowNode, PipelineFlowEdge>();
+  let initialized = $state(false), lastFitRequest = $state(0);
+  $effect(() => { if (initialized && fitRequest !== lastFitRequest) { lastFitRequest = fitRequest; void fitView({ padding: .22, maxZoom: 1.15, duration: 240 }); } });
 </script>
-<section class="canvas" bind:this={viewport} aria-label="Pipeline design canvas">
-  {#if nodes.length===0}<div class="empty"><span><Icon name="pipelines" size={25}/></span><h2>Build your Pipeline</h2><p>Add a Source, Transform or Target from the Node Palette.</p></div>{/if}
-  <div class="world" style={`transform:translate(${offsetX}px,${offsetY}px) scale(${scale})`}>
-    <PipelineEdgeLayer {nodes} {edges} {selectedEdgeId} onselect={onSelectEdge}/>
-    {#each nodes as node (node.id)}<PipelineNode {node} selected={selectedNodeId===node.id} {readonly} onselect={()=>onSelectNode(node.id)} ondragstart={(event)=>startDrag(event,node)}/>{/each}
-  </div>
-  <CanvasControls zoom={scale} onZoomIn={()=>zoom(.1)} onZoomOut={()=>zoom(-.1)} onFit={fit}/>
+
+<section class="canvas" aria-label="Pipeline design canvas">
+  <SvelteFlow bind:nodes bind:edges {nodeTypes} fitView={nodes.length > 0} fitViewOptions={{ padding: .22, maxZoom: 1.1 }}
+    nodesDraggable={!readonly} nodesConnectable={!readonly} elementsSelectable={true} minZoom={.35} maxZoom={1.8}
+    panOnDrag={true} zoomOnScroll={true} snapGrid={[10,10]} defaultEdgeOptions={{ type:'smoothstep' }}
+    deleteKey={readonly ? null : ['Backspace','Delete']} oninit={() => initialized = true}
+    onnodeclick={({node}) => onselectnode(node.id)} onedgeclick={({edge}) => onselectedge(edge.id)} onpaneclick={onclear}
+    onnodedragstop={ondragstop} onbeforeconnect={onbeforeconnect} onconnect={onconnected}
+    ondelete={({nodes:deletedNodes,edges:deletedEdges}) => ondelete(deletedNodes,deletedEdges)} colorMode="light">
+    <Background variant={BackgroundVariant.Dots} gap={20} size={1.25} patternColor="#c9d2de" />
+    <Controls position="bottom-left" showLock={false} />
+  </SvelteFlow>
+  {#if nodes.length===0}<div class="empty"><span><Icon name="pipelines" size={25}/></span><h2>Build your Pipeline</h2><p>Add a Source, Transform or Target from the node palette.</p></div>{/if}
+  {#if connectionMessage}<div class="connection-message" role="status">{connectionMessage}</div>{/if}
   <div class="canvas-meta">{nodes.length} nodes · {edges.length} connections</div>
 </section>
-<style>.canvas{position:relative;min-width:0;height:100%;overflow:hidden;background-color:var(--bg-canvas);background-image:radial-gradient(circle,#ccd4df 1px,transparent 1px);background-size:20px 20px}.world{position:absolute;inset:0;width:2000px;height:1200px;transform-origin:0 0}.empty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;color:var(--text-muted);text-align:center;pointer-events:none}.empty span{display:grid;width:3.25rem;height:3.25rem;place-items:center;border:1px solid var(--border-default);border-radius:var(--radius-lg);background:var(--bg-surface);color:var(--accent);box-shadow:var(--shadow-sm)}.empty h2{margin:.9rem 0 .2rem;color:var(--text-secondary);font-size:.95rem}.empty p{margin:0;font-size:.76rem}.canvas-meta{position:absolute;right:1rem;bottom:1rem;border:1px solid var(--border-default);border-radius:999px;background:rgb(255 255 255 / 90%);padding:.24rem .55rem;color:var(--text-muted);font-size:.62rem}</style>
+
+<style>
+  .canvas{position:relative;min-width:0;min-height:0;height:100%;overflow:hidden;background:#f7f9fc}
+  :global(.svelte-flow){background:#f7f9fc}:global(.svelte-flow__node){border:0!important;background:transparent!important;padding:0!important;box-shadow:none!important}:global(.svelte-flow__edge-path){stroke:#8996a8;stroke-width:1.6}:global(.svelte-flow__edge.selected .svelte-flow__edge-path),:global(.svelte-flow__edge:focus .svelte-flow__edge-path){stroke:var(--accent);stroke-width:2.4}:global(.svelte-flow__controls){overflow:hidden;border:1px solid var(--border-default);border-radius:8px;background:#fff;box-shadow:var(--shadow-md)}:global(.svelte-flow__controls-button){border-bottom-color:var(--border-subtle);color:var(--text-secondary)}
+  .empty{position:absolute;inset:0;z-index:2;display:grid;place-content:center;justify-items:center;color:var(--text-muted);text-align:center;pointer-events:none}.empty span{display:grid;width:3.4rem;height:3.4rem;place-items:center;border:1px solid var(--border-default);border-radius:13px;background:#fff;color:var(--accent);box-shadow:var(--shadow-sm)}.empty h2{margin:.9rem 0 .2rem;color:var(--text-secondary);font-size:1rem}.empty p{margin:0;font-size:.76rem}
+  .canvas-meta{position:absolute;right:1rem;bottom:1rem;z-index:4;border:1px solid var(--border-default);border-radius:999px;background:rgb(255 255 255 / 92%);padding:.26rem .58rem;color:var(--text-muted);font-size:.62rem;pointer-events:none}.connection-message{position:absolute;top:1rem;left:50%;z-index:5;transform:translateX(-50%);border:1px solid #efd3a4;border-radius:7px;background:#fff9ed;padding:.42rem .7rem;color:#8e5711;font-size:.68rem;box-shadow:var(--shadow-sm)}
+</style>

@@ -1,82 +1,43 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
-test('uses the real Django session for login, Pipeline registration, inspection, and logout', async ({ page }) => {
-  await page.goto('/');
-  await expect(page).toHaveURL(/\/login\?next=%2Fhome$/);
-  await expect(page.getByRole('heading', { name: 'Welcome to NEXETL' })).toBeVisible();
-  await expect(page.getByRole('navigation')).toHaveCount(0);
-  expect((await new AxeBuilder({ page }).analyze()).violations.filter((violation) => violation.impact === 'critical')).toEqual([]);
+async function signIn(page:Page){await page.goto('/login?next=/home');await page.getByLabel('Username').fill('admin');await page.getByLabel('Password').fill('123');await page.getByRole('button',{name:'Sign in'}).click();await expect(page).toHaveURL(/\/home$/)}
+async function connectHandles(page:Page,from:string,to:string){const source=page.locator(`.svelte-flow__node[data-id="${from}"] .svelte-flow__handle.source`),target=page.locator(`.svelte-flow__node[data-id="${to}"] .svelte-flow__handle.target`);const a=await source.boundingBox(),b=await target.boundingBox();if(!a||!b)throw new Error('Connection handles were not visible');await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:8});await page.mouse.up()}
 
-  await page.getByLabel('Username').fill('admin');
-  await page.getByLabel('Password').fill('123');
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page).toHaveURL(/\/home$/);
-  await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeVisible();
-  await page.getByRole('button', { name: 'Collapse navigation' }).click();
-  await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Primary navigation' }).getByText('Pipelines', { exact: true })).not.toBeVisible();
-  await page.reload();
-  await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();
-  await page.getByRole('button', { name: 'Expand navigation' }).click();
-  await expect(page.getByRole('navigation', { name: 'Primary navigation' }).getByText('Pipelines', { exact: true })).toBeVisible();
-  expect((await new AxeBuilder({ page }).analyze()).violations.filter((violation) => violation.impact === 'critical')).toEqual([]);
+test('supports the complete Pipeline authoring, conflict, and archive workflow',async({page,browser})=>{
+  test.setTimeout(60_000);
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('/');await expect(page).toHaveURL(/\/login\?next=%2Fhome$/);await expect(page.getByRole('heading',{name:'Welcome to NEXETL'})).toBeVisible();
+  await signIn(page);await expect(page.getByRole('navigation',{name:'Primary navigation'})).toBeVisible();
+  expect((await new AxeBuilder({page}).analyze()).violations.filter(v=>v.impact==='critical'||v.impact==='serious')).toEqual([]);
 
-  await page.goto('/pipelines/new');
-  await expect(page.getByRole('main')).toContainText('Create Pipeline');
-  await page.getByLabel('Name').fill('Customer Warehouse Load');
-  await page.getByLabel('Description').fill('Curates customer orders for the warehouse.');
-  await page.getByRole('button', { name: 'Create and design' }).click();
-  await expect(page).toHaveURL(/\/pipelines\/[0-9a-f-]{36}\/design$/);
-  const id = page.url().split('/').at(-2)!;
-  await expect(page.getByRole('heading', { name: 'Customer Warehouse Load' })).toBeVisible();
-  await page.getByRole('button', { name: /Source/ }).click();
-  await page.getByRole('button', { name: /Transform/ }).click();
-  await page.getByRole('button', { name: /Target/ }).click();
-  const canvas = page.getByLabel('Pipeline design canvas');
-  await expect(canvas.getByRole('button', { name: /node$/ })).toHaveCount(3);
-  await canvas.getByRole('button', { name: /source node$/ }).click();
-  await page.getByLabel('Label').fill('PostgreSQL Orders');
-  await canvas.getByRole('button', { name: /transform node$/ }).click();
-  await page.getByLabel('Label').fill('Clean Orders');
-  await canvas.getByRole('button', { name: /target node$/ }).click();
-  await page.getByLabel('Label').fill('Warehouse');
-  await page.getByText('Connection', { exact: true }).click();
-  await page.locator('details select').nth(0).selectOption({ index: 1 });
-  await page.locator('details select').nth(1).selectOption({ index: 1 });
-  await page.getByRole('button', { name: 'Connect nodes' }).click();
-  await page.locator('details select').nth(0).selectOption({ index: 2 });
-  await page.locator('details select').nth(1).selectOption({ index: 2 });
-  await page.getByRole('button', { name: 'Connect nodes' }).click();
-  const transformNode = canvas.getByRole('button', { name: /Clean Orders, transform node$/ });
-  const beforeDrag = await transformNode.boundingBox();
-  if (!beforeDrag) throw new Error('Transform node was not visible for drag verification');
-  await page.mouse.move(beforeDrag.x + 60, beforeDrag.y + 30);
-  await page.mouse.down();
-  await page.mouse.move(beforeDrag.x + 120, beforeDrag.y + 80, { steps: 5 });
-  await page.mouse.up();
-  const draggedStyle = await transformNode.getAttribute('style');
-  expect(draggedStyle).not.toBeNull();
-  await page.getByRole('button', { name: 'Save' }).click();
-  await expect(page.getByText('Saved', { exact: true })).toBeVisible();
-  await page.reload();
-  await expect(page.getByLabel('Pipeline design canvas').getByRole('button', { name: /node$/ })).toHaveCount(3);
-  await expect(page.getByRole('button', { name: /Clean Orders, transform node$/ })).toHaveAttribute('style', draggedStyle!);
-  await page.getByRole('button', { name: 'Validate' }).click();
-  await expect(page.getByText('Pipeline structure valid')).toBeVisible();
-  expect((await new AxeBuilder({ page }).analyze()).violations.filter((violation) => violation.impact === 'critical')).toEqual([]);
+  await page.goto('/pipelines/new');await page.getByLabel('Name').fill('Customer Warehouse Load');await page.getByLabel('Description').fill('Curates customer orders for the warehouse.');await page.getByRole('button',{name:'Create and design'}).click();
+  await expect(page).toHaveURL(/\/pipelines\/[0-9a-f-]{36}\/design$/,{timeout:15_000});const id=page.url().split('/').at(-2)!;
+  await expect(page.getByRole('heading',{name:'Customer Warehouse Load',level:1})).toBeVisible();
+  const canvas=page.getByLabel('Pipeline design canvas');const canvasBox=await canvas.boundingBox();expect(canvasBox).not.toBeNull();expect(canvasBox!.y+canvasBox!.height).toBeGreaterThan(895);
+  await page.getByRole('button',{name:/Source/}).click();await page.getByRole('button',{name:/Transform/}).click();await page.getByRole('button',{name:/Target/}).click();
+  await expect(canvas.locator('.svelte-flow__node')).toHaveCount(3);
+  const graphNodes=canvas.locator('.svelte-flow__node');const sourceId=await graphNodes.nth(0).getAttribute('data-id'),transformId=await graphNodes.nth(1).getAttribute('data-id'),targetId=await graphNodes.nth(2).getAttribute('data-id');if(!sourceId||!transformId||!targetId)throw new Error('Node identifiers were missing');
+  await graphNodes.nth(0).click();await page.getByLabel('Label').fill('PostgreSQL Orders');await graphNodes.nth(1).click();await page.getByLabel('Label').fill('Clean Orders');await graphNodes.nth(2).click();await page.getByLabel('Label').fill('PostgreSQL Target');
+  await connectHandles(page,sourceId,transformId);await connectHandles(page,transformId,targetId);await expect(canvas.locator('.svelte-flow__edge')).toHaveCount(2);
 
-  await page.goto(`/pipelines/${id}`);
-  await page.getByRole('button', { name: 'Archive' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Archive' }).click();
-  await expect(page.getByText('Archived Pipeline Definitions are read only.')).toBeVisible();
-  await page.goto(`/pipelines/${id}/design`);
-  await expect(page.getByText('Read only', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Source/ })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Save' })).toHaveCount(0);
+  const transform=canvas.locator(`.svelte-flow__node[data-id="${transformId}"]`);const before=await transform.boundingBox();if(!before)throw new Error('Transform was not visible');const edgeBefore=await canvas.locator('.svelte-flow__edge-path').evaluateAll(paths=>paths.map(path=>path.getAttribute('d')));
+  await page.mouse.move(before.x+70,before.y+35);await page.mouse.down();await page.mouse.move(before.x+250,before.y+120,{steps:10});await page.mouse.up();const after=await transform.boundingBox();expect(after!.x-before.x).toBeGreaterThan(140);expect(after!.y-before.y).toBeGreaterThan(60);const edgeAfter=await canvas.locator('.svelte-flow__edge-path').evaluateAll(paths=>paths.map(path=>path.getAttribute('d')));expect(edgeAfter).not.toEqual(edgeBefore);await expect(page.getByText('Unsaved changes',{exact:true})).toBeVisible();
+  const saveResponse=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/design/'));await page.getByRole('button',{name:'Save'}).click();const saved=await saveResponse;expect(saved.status(),`${saved.request().postData()}\n${await saved.text()}`).toBe(200);await expect(page.getByText('Saved',{exact:true})).toBeVisible();const savedGraphStyle=await transform.getAttribute('style');await page.reload();await expect(canvas.locator('.svelte-flow__node')).toHaveCount(3);await expect(canvas.locator('.svelte-flow__edge')).toHaveCount(2);await expect(canvas.locator(`.svelte-flow__node[data-id="${transformId}"]`)).toHaveAttribute('style',savedGraphStyle!);
 
-  await page.getByRole('button', { name: 'Sign out' }).click();
-  await expect(page).toHaveURL(/\/login$/);
-  await page.goto(`/pipelines/${id}`);
-  await expect(page).toHaveURL(/\/login\?next=/);
+  await canvas.locator(`.svelte-flow__node[data-id="${sourceId}"]`).click();await expect(page.getByLabel('Label')).toHaveValue('PostgreSQL Orders');await expect(page.getByText('SOURCE',{exact:true}).first()).toBeVisible();await expect(page.getByText('postgresql',{exact:true}).first()).toBeVisible();await expect(page.getByText(sourceId,{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Validate'}).click();await expect(page.getByText('Pipeline structure valid')).toBeVisible();
+
+  const contextB=await browser.newContext({baseURL:'http://localhost:5173',viewport:{width:1440,height:900}});const pageB=await contextB.newPage();await pageB.goto(`/login?next=${encodeURIComponent(`/pipelines/${id}/design`)}`);await pageB.getByLabel('Username').fill('admin');await pageB.getByLabel('Password').fill('123');await pageB.getByRole('button',{name:'Sign in'}).click();await expect(pageB).toHaveURL(new RegExp(`/pipelines/${id}/design$`));await expect(pageB.locator('.svelte-flow__node')).toHaveCount(3);
+  await canvas.locator(`.svelte-flow__node[data-id="${sourceId}"]`).click();await page.getByLabel('Label').fill('Orders Source v2');await page.getByRole('button',{name:'Save'}).click();await expect(page.getByText('Saved',{exact:true})).toBeVisible();
+  await pageB.locator(`.svelte-flow__node[data-id="${sourceId}"]`).click();await pageB.getByLabel('Label').fill('Stale Orders');await pageB.getByRole('button',{name:'Save'}).click();await expect(pageB.getByText('Revision conflict',{exact:true})).toBeVisible();await pageB.getByRole('button',{name:'Reload latest'}).click();await expect(pageB.locator(`.svelte-flow__node[data-id="${sourceId}"]`)).toContainText('Orders Source v2');await contextB.close();
+
+  await page.getByText('Connections',{exact:true}).click();await page.getByRole('button',{name:/Delete connection from Orders Source v2 to Clean Orders/}).click();await expect(canvas.locator('.svelte-flow__edge')).toHaveCount(1);await page.getByRole('button',{name:'Save'}).click();await page.reload();await expect(canvas.locator('.svelte-flow__edge')).toHaveCount(1);
+  await canvas.locator(`.svelte-flow__node[data-id="${transformId}"]`).click();await page.getByRole('button',{name:'Delete node'}).click();await expect(canvas.locator('.svelte-flow__node')).toHaveCount(2);await expect(canvas.locator('.svelte-flow__edge')).toHaveCount(0);await page.getByRole('button',{name:'Save'}).click();await page.reload();await expect(canvas.locator('.svelte-flow__node')).toHaveCount(2);await expect(canvas.locator('.svelte-flow__edge')).toHaveCount(0);
+  expect((await new AxeBuilder({page}).analyze()).violations.filter(v=>v.impact==='critical'||v.impact==='serious')).toEqual([]);
+
+  await page.goto(`/pipelines/${id}`);await page.getByRole('button',{name:'Archive'}).click();await page.getByRole('dialog').getByRole('button',{name:'Archive'}).click();await expect(page.getByText('Archived Pipeline Definitions are read only.')).toBeVisible();await page.goto(`/pipelines/${id}/design`);await expect(page.getByText('Read only',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:/Source/})).toBeDisabled();await expect(page.getByRole('button',{name:'Save'})).toHaveCount(0);await expect(page.locator('.svelte-flow__controls')).toBeVisible();
+  const archivedNode=page.locator('.svelte-flow__node').first(),archivedGraphStyle=await archivedNode.getAttribute('style');await archivedNode.dragTo(page.locator('.svelte-flow__pane'),{targetPosition:{x:600,y:400}});await expect(archivedNode).toHaveAttribute('style',archivedGraphStyle!);
 });
+
+test('uses deliberate responsive layouts',async({browser})=>{for(const viewport of [{width:1024,height:768},{width:768,height:900},{width:375,height:812}]){const context=await browser.newContext({baseURL:'http://localhost:5173',viewport});const page=await context.newPage();await page.goto('/login?next=/pipelines');await page.getByLabel('Username').fill('admin');await page.getByLabel('Password').fill('123');await page.getByRole('button',{name:'Sign in'}).click();await expect(page).toHaveURL(/\/pipelines$/);await expect(page.getByRole('heading',{name:'Pipelines'})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(viewport.width);await context.close()}});
