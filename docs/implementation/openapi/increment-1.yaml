@@ -11,7 +11,7 @@ paths:
     get:
       summary: Bootstrap the browser CSRF cookie
       responses:
-        '204':
+        '200':
           description: CSRF cookie established; no response body.
   /api/pipeline-definitions/:
     post:

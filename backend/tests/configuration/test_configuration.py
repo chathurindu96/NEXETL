@@ -43,6 +43,7 @@ def test_safe_defaults_are_resolved_without_secret_fallbacks() -> None:
     assert configuration.allowed_hosts == ("localhost", "127.0.0.1")
     assert configuration.session_cookie_secure is True
     assert configuration.csrf_cookie_secure is True
+    assert configuration.csrf_trusted_origins == ()
 
 
 def test_explicit_process_environment_values_are_typed() -> None:
@@ -58,6 +59,7 @@ def test_explicit_process_environment_values_are_typed() -> None:
             "NEXETL_ALLOWED_HOSTS": "testserver, localhost",
             "NEXETL_SESSION_COOKIE_SECURE": "false",
             "NEXETL_CSRF_COOKIE_SECURE": "false",
+            "NEXETL_CSRF_TRUSTED_ORIGINS": "http://localhost:5173, https://example.test",
         }
     )
 
@@ -68,6 +70,7 @@ def test_explicit_process_environment_values_are_typed() -> None:
     assert configuration.allowed_hosts == ("testserver", "localhost")
     assert configuration.session_cookie_secure is False
     assert configuration.csrf_cookie_secure is False
+    assert configuration.csrf_trusted_origins == ("http://localhost:5173", "https://example.test")
 
 
 def test_secure_cookie_defaults_do_not_depend_on_debug() -> None:
@@ -252,6 +255,12 @@ def test_invalid_boolean_has_a_controlled_failure(name: str, value: str) -> None
 def test_allowed_hosts_must_resolve_to_a_non_empty_list(value: str) -> None:
     with pytest.raises(ConfigurationError, match="NEXETL_ALLOWED_HOSTS"):
         _validated_configuration(_complete_values() | {"NEXETL_ALLOWED_HOSTS": value})
+
+
+@pytest.mark.parametrize("value", ["localhost:5173", "ftp://localhost:5173", "http://localhost:5173/path"])
+def test_trusted_origins_must_be_http_origins(value: str) -> None:
+    with pytest.raises(ConfigurationError, match="NEXETL_CSRF_TRUSTED_ORIGINS"):
+        _validated_configuration(_complete_values() | {"NEXETL_CSRF_TRUSTED_ORIGINS": value})
 
 
 def test_complete_configuration_validates_deterministically() -> None:

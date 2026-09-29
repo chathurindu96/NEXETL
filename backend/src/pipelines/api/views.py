@@ -17,7 +17,9 @@ from pipelines.infrastructure.persistence.store import DjangoPipelineDefinitionS
 @ensure_csrf_cookie
 def csrf_bootstrap(_: HttpRequest) -> HttpResponse:
     """Establish Django's CSRF cookie for direct browser-to-API requests."""
-    return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+    # A successful bodyless 200 keeps the existing cookie bootstrap contract while
+    # allowing the browser/proxy path to retain the Set-Cookie response reliably.
+    return HttpResponse(status=status.HTTP_200_OK)
 
 
 class PipelineDefinitionCollectionView(APIView):

@@ -29,6 +29,7 @@ set NEXETL_DJANGO_DEBUG=false
 set NEXETL_ALLOWED_HOSTS=localhost,127.0.0.1
 set NEXETL_SESSION_COOKIE_SECURE=false
 set NEXETL_CSRF_COOKIE_SECURE=false
+set NEXETL_CSRF_TRUSTED_ORIGINS=http://localhost:5173
 ```
 
 Purpose:
@@ -199,6 +200,25 @@ emits an INFO console line containing only method, path, status, and duration.
 Request/response bodies, headers, cookies, query strings, and configuration
 values are intentionally excluded.
 
+## Bootstrap the development-only superadmin
+
+Before running this command, explicitly set both `NEXETL_DJANGO_DEBUG=true`
+and `NEXETL_DEV_SUPERADMIN_ENABLED=true` in the ignored root `.env` (or as
+process environment values). Then, from `C:\Projects\NEXETL\backend`, run:
+
+```cmd
+uv run python manage.py bootstrap_dev_superadmin
+```
+
+The command creates or updates the real Django user `admin` with the approved
+development-only password `123`. It is idempotent and uses Django password
+hashing, sessions, and standard superuser permissions. It refuses to run unless
+both guards are true and never prints the password.
+
+`admin / 123` is insecure local-development support only. Never enable it in
+production, staging exposed to untrusted users, or any public deployment. The
+feature is disabled by default and does not create an account automatically.
+
 ## Run the SvelteKit frontend
 
 Working directory: `C:\Projects\NEXETL\frontend`
@@ -210,6 +230,14 @@ npm run dev
 The local Vite proxy forwards `/api` requests to `http://127.0.0.1:8000`.
 The approved Increment 1 browser routes are `/pipelines/new` and
 `/pipelines/{pipelineDefinitionId}`.
+
+The browser starts with a session check. Unauthenticated visitors are routed to
+`/login`; after real Django session login they return to the requested route or
+`/pipelines/new`. For local HTTP development, the explicit
+`NEXETL_SESSION_COOKIE_SECURE=false` and `NEXETL_CSRF_COOKIE_SECURE=false`
+overrides remain required. `NEXETL_CSRF_TRUSTED_ORIGINS=http://localhost:5173`
+is also required for the browser's CSRF-protected proxy requests. The normal flow is CSRF bootstrap, session login,
+Pipeline registration/inspection, then session logout.
 
 The frontend root (`/`) redirects through SvelteKit navigation to
 `/pipelines/new`. Unknown browser routes show a friendly error page, and the

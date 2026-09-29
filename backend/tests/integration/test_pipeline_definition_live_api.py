@@ -25,7 +25,7 @@ def _authenticated_client(*permissions: str) -> APIClient:
 
 def _csrf(client: APIClient) -> str:
     response = client.get("/api/security/csrf/")
-    assert response.status_code == 204
+    assert response.status_code == 200
     return client.cookies["csrftoken"].value
 
 

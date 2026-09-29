@@ -24,8 +24,11 @@ def test_django_bootstrap_entry_points_import(
     asgi = importlib.import_module("nexetl.asgi")
     wsgi = importlib.import_module("nexetl.wsgi")
 
-    assert len(urls.urlpatterns) == 2
+    assert len(urls.urlpatterns) == 5
     assert urls.urlpatterns[0].name == "service-index"
-    assert len(urls.urlpatterns[1].url_patterns) == 3
+    assert urls.urlpatterns[1].name == "auth-session"
+    assert urls.urlpatterns[2].name == "auth-login"
+    assert urls.urlpatterns[3].name == "auth-logout"
+    assert len(urls.urlpatterns[4].url_patterns) == 3
     assert asgi.application is not None
     assert wsgi.application is not None

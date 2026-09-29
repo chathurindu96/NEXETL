@@ -6,6 +6,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
@@ -42,6 +43,15 @@ class DatabaseConfiguration:
 
 
 @dataclass(frozen=True)
+class DevelopmentSuperadminConfiguration:
+    """Explicitly opt-in local-only account bootstrap settings."""
+
+    enabled: bool = False
+    username: str = "admin"
+    password: str = field(default="123", repr=False)
+
+
+@dataclass(frozen=True)
 class BackendConfiguration:
     """Typed backend values resolved exclusively from the process environment."""
 
@@ -51,6 +61,8 @@ class BackendConfiguration:
     allowed_hosts: tuple[str, ...]
     session_cookie_secure: bool
     csrf_cookie_secure: bool
+    csrf_trusted_origins: tuple[str, ...]
+    development_superadmin: DevelopmentSuperadminConfiguration
 
 
 def configure_django_settings_module() -> None:
@@ -88,6 +100,12 @@ def load_backend_configuration(
         csrf_cookie_secure=_boolean(
             "NEXETL_CSRF_COOKIE_SECURE", source, default=True
         ),
+        csrf_trusted_origins=_trusted_origins(source),
+        development_superadmin=DevelopmentSuperadminConfiguration(
+            enabled=_boolean("NEXETL_DEV_SUPERADMIN_ENABLED", source, default=False),
+            username=_text("NEXETL_DEV_SUPERADMIN_USERNAME", source, default="admin"),
+            password=_text("NEXETL_DEV_SUPERADMIN_PASSWORD", source, default="123"),
+        ),
     )
 
 
@@ -102,6 +120,7 @@ def validate_backend_configuration(
     _non_empty("NEXETL_DB_HOST", configuration.database.host)
     _port_in_range(configuration.database.port)
     _non_empty_allowed_hosts(configuration.allowed_hosts)
+    _valid_trusted_origins(configuration.csrf_trusted_origins)
 
     return configuration
 
@@ -138,6 +157,11 @@ def _allowed_hosts(environ: Mapping[str, str]) -> tuple[str, ...]:
     return tuple(host.strip() for host in raw_value.split(",") if host.strip())
 
 
+def _trusted_origins(environ: Mapping[str, str]) -> tuple[str, ...]:
+    raw_value = environ.get("NEXETL_CSRF_TRUSTED_ORIGINS", "")
+    return tuple(origin.strip() for origin in raw_value.split(",") if origin.strip())
+
+
 def _required_secret(name: str, value: str | None) -> None:
     if value is None or not value.strip() or value.lower() in KNOWN_SECRET_PLACEHOLDERS:
         raise ConfigurationError(f"{name} must be supplied with a non-placeholder value")
@@ -156,3 +180,12 @@ def _port_in_range(value: int) -> None:
 def _non_empty_allowed_hosts(hosts: tuple[str, ...]) -> None:
     if not hosts:
         raise ConfigurationError("NEXETL_ALLOWED_HOSTS must contain at least one host")
+
+
+def _valid_trusted_origins(origins: tuple[str, ...]) -> None:
+    for origin in origins:
+        parsed = urlparse(origin)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.path not in {"", "/"}:
+            raise ConfigurationError(
+                "NEXETL_CSRF_TRUSTED_ORIGINS must contain comma-separated http(s) origins"
+            )

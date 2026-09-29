@@ -43,9 +43,9 @@ def memory_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("pipelines.api.views.DjangoPipelineDefinitionStore", MemoryStore)
 
 
-def test_csrf_bootstrap_returns_no_content_and_sets_cookie() -> None:
+def test_csrf_bootstrap_returns_success_and_sets_cookie() -> None:
     response = Client().get("/api/security/csrf/")
-    assert response.status_code == 204
+    assert response.status_code == 200
     assert "csrftoken" in response.cookies
 
 

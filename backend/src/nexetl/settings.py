@@ -65,6 +65,7 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = CONFIGURATION.session_cookie_secure
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = CONFIGURATION.csrf_cookie_secure
+CSRF_TRUSTED_ORIGINS = list(CONFIGURATION.csrf_trusted_origins)
 
 LOGGING = {
     "version": 1,
