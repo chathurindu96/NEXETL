@@ -148,3 +148,12 @@ Read-only schema inspection confirmed the deployed Pipeline Definition table
 has one `id:uuid:NO` column. No ad-hoc DDL was used.
 
 Because the daemon was unavailable, PostgreSQL was not started and the documented SELECT queries and Django connectivity command were not executed. Runtime connectivity remains blocked only by current local Docker state; no competing database configuration was introduced.
+
+# Increment 2 design-time schema
+
+Pipeline metadata remains in `nexetl_pipeline_definition`. Persistent authoring
+designs are normalized in `nexetl_pipeline_design`, `nexetl_pipeline_design_node`,
+and `nexetl_pipeline_design_edge`. The design has a revision field for optimistic
+concurrency, node positions and optional connector keys, and foreign-keyed edge
+endpoints with a unique design/source/target constraint. These tables contain no
+credentials, runtime configuration, execution records, or operational data.

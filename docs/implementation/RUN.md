@@ -228,8 +228,9 @@ npm run dev
 ```
 
 The local Vite proxy forwards `/api` requests to `http://127.0.0.1:8000`.
-The approved Increment 1 browser routes are `/pipelines/new` and
-`/pipelines/{pipelineDefinitionId}`.
+The Increment 2 browser routes are `/home`, `/pipelines`, `/pipelines/new`,
+`/pipelines/{pipelineDefinitionId}`, `/pipelines/{pipelineDefinitionId}/design`,
+`/connectors`, `/connectors/{connectorKey}`, and `/settings`.
 
 The browser starts with a session check. Unauthenticated visitors are routed to
 `/login`; after real Django session login they return to the requested route or
