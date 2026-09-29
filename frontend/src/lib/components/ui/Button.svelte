@@ -6,7 +6,7 @@
   {#if loading}<span class="spinner" aria-hidden="true"></span>{/if}{@render children?.()}
 </button>
 <style>
-  button { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-height:2.375rem; border:1px solid transparent; border-radius:var(--radius-sm); padding:.45rem .8rem; cursor:pointer; font-size:.875rem; font-weight:600; transition:background-color .15s ease, border-color .15s ease; }
+  button { display:inline-flex; align-items:center; justify-content:center; gap:.45rem; min-height:2.25rem; border:1px solid transparent; border-radius:var(--radius-sm); padding:.42rem .75rem; cursor:pointer; font-size:.78rem; font-weight:650; transition:background-color .15s ease, border-color .15s ease; }
   .primary { background:var(--color-primary); color:var(--color-primary-text); } .primary:hover:not(:disabled) { background:var(--color-primary-hover); }
   .secondary { background:var(--color-surface); border-color:var(--color-border); color:var(--color-text); } .secondary:hover:not(:disabled) { background:var(--color-surface-muted); }
   .danger { background:var(--color-danger); color:white; } button:disabled { cursor:not-allowed; opacity:.62; }
