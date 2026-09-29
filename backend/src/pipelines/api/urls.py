@@ -8,6 +8,8 @@ from .views import (
     PipelineDefinitionArchiveView,
     PipelineDefinitionCollectionView,
     PipelineDefinitionDetailView,
+    PipelineDesignView,
+    PipelineDesignValidationView,
     csrf_bootstrap,
 )
 
@@ -35,4 +37,6 @@ urlpatterns: list[URLPattern | URLResolver] = [
         PipelineDefinitionArchiveView.as_view(),
         name="pipeline-definition-archive",
     ),
+    path("pipeline-definitions/<str:pipeline_definition_id>/design/", PipelineDesignView.as_view(), name="pipeline-design"),
+    path("pipeline-definitions/<str:pipeline_definition_id>/design/validate/", PipelineDesignValidationView.as_view(), name="pipeline-design-validate"),
 ]
