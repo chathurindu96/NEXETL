@@ -62,7 +62,11 @@ def test_session_login_state_logout_and_csrf() -> None:
     logged_in = client.post("/api/auth/login/", data=json.dumps({"username": "admin", "password": "123"}), content_type="application/json", HTTP_X_CSRFTOKEN=_csrf(client))
     assert logged_in.status_code == 204
     assert client.get("/api/auth/session/").json() == {"authenticated": True, "username": "admin"}
-    protected = client.post("/api/pipeline-definitions/", HTTP_X_CSRFTOKEN=_csrf(client))
+    protected = client.post(
+        "/api/pipeline-definitions/",
+        data={"name": "Authenticated pipeline"},
+        HTTP_X_CSRFTOKEN=_csrf(client),
+    )
     assert protected.status_code == 201
     assert client.post("/api/auth/logout/", HTTP_X_CSRFTOKEN=_csrf(client)).status_code == 204
     assert client.get("/api/auth/session/").json() == {"authenticated": False}

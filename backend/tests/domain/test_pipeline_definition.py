@@ -15,16 +15,17 @@ class InMemoryPipelineDefinitionStore:
         return self.values.get(pipeline_definition_id)
 
 
-def test_register_creates_a_canonical_uuid_identity_only() -> None:
-    result = RegisterPipelineDefinition(InMemoryPipelineDefinitionStore()).execute()
+def test_register_creates_a_canonical_uuid_with_authoring_metadata() -> None:
+    result = RegisterPipelineDefinition(InMemoryPipelineDefinitionStore()).execute("Customer Load")
 
     assert isinstance(result.id, PipelineDefinitionId)
     assert str(result.id) == str(result.id.value)
+    assert result.name == "Customer Load"
 
 
 def test_inspect_returns_the_persisted_identity_or_none() -> None:
     store = InMemoryPipelineDefinitionStore()
-    created = RegisterPipelineDefinition(store).execute()
+    created = RegisterPipelineDefinition(store).execute("Customer Load")
 
     assert InspectPipelineDefinition(store).execute(created.id) == created
     assert InspectPipelineDefinition(store).execute(PipelineDefinitionId.generate()) is None

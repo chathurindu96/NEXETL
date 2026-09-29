@@ -34,7 +34,9 @@ def test_authorized_registration_persists_and_can_be_inspected() -> None:
     client = _authenticated_client("register_pipeline_definition", "inspect_pipeline_definition")
 
     created = client.post(
-        "/api/pipeline-definitions/", HTTP_X_CSRFTOKEN=_csrf(client)
+        "/api/pipeline-definitions/",
+        data={"name": "Customer Load", "description": "Integration test"},
+        HTTP_X_CSRFTOKEN=_csrf(client),
     )
 
     assert created.status_code == 201
@@ -44,7 +46,8 @@ def test_authorized_registration_persists_and_can_be_inspected() -> None:
 
     inspected = client.get(f"/api/pipeline-definitions/{identifier}/")
     assert inspected.status_code == 200
-    assert inspected.json() == {"id": identifier}
+    assert inspected.json()["id"] == identifier
+    assert inspected.json()["name"] == "Customer Load"
 
 
 @pytest.mark.django_db
@@ -78,3 +81,73 @@ def test_live_api_security_and_error_contract() -> None:
     )
     assert method.status_code == 405
     assert method.json()["code"] == "NEXETL_METHOD_NOT_ALLOWED"
+
+
+@pytest.mark.django_db
+def test_registry_lifecycle_querying_and_archived_enforcement() -> None:
+    client = _authenticated_client(
+        "register_pipeline_definition",
+        "inspect_pipeline_definition",
+        "list_pipeline_definition",
+        "update_pipeline_definition",
+        "archive_pipeline_definition",
+    )
+    csrf = _csrf(client)
+    first = client.post(
+        "/api/pipeline-definitions/",
+        data={"name": "Alpha", "description": "First"},
+        HTTP_X_CSRFTOKEN=csrf,
+    )
+    second = client.post(
+        "/api/pipeline-definitions/",
+        data={"name": "Bravo", "description": "Second"},
+        HTTP_X_CSRFTOKEN=csrf,
+    )
+    assert first.status_code == second.status_code == 201
+
+    listed = client.get("/api/pipeline-definitions/?search=br&page=1&pageSize=1&sort=name")
+    assert listed.status_code == 200
+    assert listed.json()["totalItems"] == 1
+    assert listed.json()["items"][0]["name"] == "Bravo"
+
+    identifier = first.json()["id"]
+    updated = client.patch(
+        f"/api/pipeline-definitions/{identifier}/",
+        data={"name": "Alpha Updated"},
+        content_type="application/json",
+        HTTP_X_CSRFTOKEN=_csrf(client),
+    )
+    assert updated.status_code == 200
+    assert updated.json()["name"] == "Alpha Updated"
+
+    archived = client.post(
+        f"/api/pipeline-definitions/{identifier}/archive/",
+        HTTP_X_CSRFTOKEN=_csrf(client),
+    )
+    assert archived.status_code == 200
+    assert archived.json()["state"] == "ARCHIVED"
+    rejected = client.patch(
+        f"/api/pipeline-definitions/{identifier}/",
+        data={"name": "Must not update"},
+        content_type="application/json",
+        HTTP_X_CSRFTOKEN=_csrf(client),
+    )
+    assert rejected.status_code == 409
+    assert rejected.json()["code"] == "NEXETL_PIPELINE_ARCHIVED"
+
+
+@pytest.mark.django_db
+def test_connector_catalogue_is_read_only_and_complete() -> None:
+    client = _authenticated_client("inspect_pipeline_definition")
+    response = client.get("/api/connectors/")
+    assert response.status_code == 200
+    assert [item["key"] for item in response.json()["items"]] == [
+        "postgresql",
+        "sqlserver",
+        "mysql",
+        "mariadb",
+    ]
+    detail = client.get("/api/connectors/postgresql/")
+    assert detail.status_code == 200
+    assert detail.json()["capabilities"] == ["read", "write"]
+    assert client.post("/api/connectors/", HTTP_X_CSRFTOKEN=_csrf(client)).status_code == 405

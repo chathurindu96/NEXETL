@@ -10,9 +10,11 @@ django.setup()
 from pipelines.infrastructure.persistence.models import PipelineDefinitionRecord
 
 
-def test_pipeline_definition_record_has_only_the_governed_uuid_primary_key() -> None:
+def test_pipeline_definition_record_has_the_increment_two_registry_shape() -> None:
     fields = PipelineDefinitionRecord._meta.local_fields
 
     assert PipelineDefinitionRecord._meta.db_table == "nexetl_pipeline_definition"
-    assert [field.name for field in fields] == ["id"]
+    assert [field.name for field in fields] == [
+        "id", "name", "description", "state", "created_at", "updated_at"
+    ]
     assert fields[0].primary_key is True

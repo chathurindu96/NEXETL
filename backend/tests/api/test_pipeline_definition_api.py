@@ -36,6 +36,14 @@ class MemoryStore:
     def get(self, identifier: PipelineDefinitionId) -> PipelineDefinition | None:
         return self.definitions.get(identifier)
 
+    def list(self, **_: object) -> tuple[list[PipelineDefinition], int]:
+        values = list(self.definitions.values())
+        return values, len(values)
+
+    def update(self, pipeline_definition: PipelineDefinition) -> PipelineDefinition:
+        self.definitions[pipeline_definition.id] = pipeline_definition
+        return pipeline_definition
+
 
 @pytest.fixture(autouse=True)
 def memory_store(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -50,7 +58,7 @@ def test_csrf_bootstrap_returns_success_and_sets_cookie() -> None:
 
 
 def test_unauthenticated_post_is_a_governed_401() -> None:
-    request = APIRequestFactory().post("/api/pipeline-definitions/")
+    request = APIRequestFactory().post("/api/pipeline-definitions/", {"name": "Customer Load", "description": "Test"}, format="json")
     force_authenticate(request, user=Principal(authenticated=False))
     response = PipelineDefinitionCollectionView.as_view()(request)
     assert response.status_code == 401
@@ -58,7 +66,7 @@ def test_unauthenticated_post_is_a_governed_401() -> None:
 
 
 def test_unsupported_method_uses_the_governed_405_contract() -> None:
-    request = APIRequestFactory().get("/api/pipeline-definitions/")
+    request = APIRequestFactory().put("/api/pipeline-definitions/")
     response = PipelineDefinitionCollectionView.as_view()(request)
     assert response.status_code == 405
     assert response.data["code"] == "NEXETL_METHOD_NOT_ALLOWED"
@@ -73,7 +81,7 @@ def test_unauthorized_post_is_a_governed_403() -> None:
 
 
 def test_authorized_post_registers_identity_and_returns_location() -> None:
-    request = APIRequestFactory().post("/api/pipeline-definitions/")
+    request = APIRequestFactory().post("/api/pipeline-definitions/", {"name": "Customer Load", "description": "Test"}, format="json")
     force_authenticate(request, user=Principal())
     response = PipelineDefinitionCollectionView.as_view()(request)
     assert response.status_code == 201

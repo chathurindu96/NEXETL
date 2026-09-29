@@ -19,7 +19,7 @@ def controlled_bootstrap_environment(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_django_bootstrap_entry_points_import(
     controlled_bootstrap_environment: None,
 ) -> None:
-    """The settings, root URLs, ASGI, and WSGI adapters load with Increment 1 routes."""
+    """The settings, root URLs, ASGI, and WSGI adapters load with Increment 2 routes."""
     urls = importlib.import_module("nexetl.urls")
     asgi = importlib.import_module("nexetl.asgi")
     wsgi = importlib.import_module("nexetl.wsgi")
@@ -29,6 +29,6 @@ def test_django_bootstrap_entry_points_import(
     assert urls.urlpatterns[1].name == "auth-session"
     assert urls.urlpatterns[2].name == "auth-login"
     assert urls.urlpatterns[3].name == "auth-logout"
-    assert len(urls.urlpatterns[4].url_patterns) == 3
+    assert len(urls.urlpatterns[4].url_patterns) == 6
     assert asgi.application is not None
     assert wsgi.application is not None
