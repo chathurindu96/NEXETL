@@ -29,7 +29,7 @@ a { color: var(--color-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 :focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
-.sidebar { background: #101828; color: #e6ebf4; padding: var(--space-5) var(--space-3); }
+.sidebar { position:relative; background: #172033; border-right:1px solid #26334a; color: #e6ebf4; padding: var(--space-5) var(--space-3); }
 .brand { display: flex; align-items: center; gap: var(--space-3); margin: 0 var(--space-2) var(--space-8); color: white; font-size: 1.05rem; font-weight: 750; letter-spacing: .04em; }
 .brand-mark { display: grid; width: 1.9rem; height: 1.9rem; place-items: center; border-radius: var(--radius-sm); background: var(--color-primary); color: white; font-size: .75rem; font-weight: 800; }
 .nav-label { margin: 0 var(--space-3) var(--space-2); color: #98a2b3; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -39,5 +39,6 @@ a:hover { text-decoration: underline; }
 .topbar { height: var(--topbar-height); display: flex; align-items: center; border-bottom: 1px solid var(--color-border); background: rgb(255 255 255 / 92%); padding: 0 var(--space-6); }
 .topbar-context { font-size: .875rem; font-weight: 650; }
 .environment-badge { margin-left: auto; border: 1px solid #b2ddff; border-radius: 999px; background: #eff8ff; color: var(--color-info); padding: .2rem .55rem; font-size: .75rem; font-weight: 650; }
+.sidebar-badge{position:absolute;bottom:var(--space-5);left:var(--space-4);margin:0}.user-area{display:flex;align-items:center;gap:.65rem;margin-left:auto;font-size:.82rem}.role{color:var(--color-text-muted)}.user-area button{border:0;background:transparent;color:var(--color-primary);cursor:pointer;font:inherit}.session-loading{display:grid;min-height:100vh;place-items:center;color:var(--color-text-muted)}
 .main-content { width: min(100%, var(--content-width)); padding: var(--space-8) var(--space-6); }
 @media (max-width: 700px) { .app-shell { display: block; } .sidebar { display: flex; align-items: center; padding: var(--space-3) var(--space-4); } .brand { margin: 0; } .sidebar nav { margin-left: auto; } .nav-label { display: none; } .nav-link { padding: .35rem .5rem; } .topbar { display: none; } .main-content { padding: var(--space-5) var(--space-4); } }

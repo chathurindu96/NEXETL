@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { getPipelineDefinition, pipelineErrorMessage, type NexetlError } from '$lib/api/pipelines';
+  import { clearSession } from '$lib/session';
   import Alert from '$lib/components/ui/Alert.svelte'; import Card from '$lib/components/ui/Card.svelte'; import LoadingState from '$lib/components/ui/LoadingState.svelte'; import PageHeader from '$lib/components/ui/PageHeader.svelte';
   let id = $state('');
   let message = $state('');
@@ -12,7 +14,15 @@
       if (!value) throw new Error('A Pipeline Definition identifier is required.');
       id = await getPipelineDefinition(value);
     }
-    catch (error) { message = pipelineErrorMessage(error as NexetlError); }
+    catch (error) {
+      const failure = error as NexetlError;
+      if (failure.code === 'NEXETL_AUTHENTICATION_REQUIRED') {
+        clearSession();
+        await goto(`/login?next=${encodeURIComponent(page.url.pathname)}`);
+        return;
+      }
+      message = pipelineErrorMessage(failure);
+    }
     finally { loading = false; }
   }
 </script>
