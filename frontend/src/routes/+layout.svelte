@@ -3,11 +3,11 @@
   import { goto } from '$app/navigation'; import { page } from '$app/state'; import { onMount } from 'svelte';
   import { logout } from '$lib/api/auth'; import { clearSession, refreshSession, session } from '$lib/session';
   let { children } = $props(); let collapsed = $state(false); let drawerOpen = $state(false); let signingOut = $state(false);
-  const navigation = [{ label: 'Home', href: '/home' }, { label: 'Pipelines', href: '/pipelines' }, { label: 'Connectors', href: '/connectors' }];
+  const navigation = [{ label: 'Home', href: '/home' }, { label: 'Pipelines', href: '/pipelines' }, { label: 'Connectors', href: '/connectors' }, { label: 'Settings', href: '/settings' }];
   onMount(() => { collapsed = localStorage.getItem('nexetl.sidebar.collapsed') === 'true'; void refreshSession(); });
   $effect(() => { if ($session.loading || signingOut) return; const login = page.url.pathname === '/login'; if (!login && !$session.authenticated) void goto(`/login?next=${encodeURIComponent(page.url.pathname + page.url.search)}`); if (login && $session.authenticated) void goto(page.url.searchParams.get('next') || '/home'); });
   function active(href: string) { return href === '/home' ? page.url.pathname === href : page.url.pathname === href || page.url.pathname.startsWith(`${href}/`); }
-  function context() { const path = page.url.pathname; if (path === '/home') return 'Home'; if (path === '/pipelines/new') return 'Pipelines / New'; if (path.startsWith('/pipelines/')) return 'Pipelines / Details'; if (path.startsWith('/pipelines')) return 'Pipelines'; if (path.startsWith('/connectors/') && path !== '/connectors/') return 'Connectors / Details'; return 'Connectors'; }
+  function context() { const path = page.url.pathname; if (path === '/home') return 'Home'; if (path === '/settings') return 'Settings'; if (path.endsWith('/design')) return 'Pipelines / Design'; if (path === '/pipelines/new') return 'Pipelines / New'; if (path.startsWith('/pipelines/')) return 'Pipelines / Details'; if (path.startsWith('/pipelines')) return 'Pipelines'; if (path.startsWith('/connectors/') && path !== '/connectors/') return 'Connectors / Details'; return 'Connectors'; }
   async function signOut() { signingOut = true; try { await logout(); } finally { clearSession(); await goto('/login'); } }
   function toggleNavigation() { collapsed = !collapsed; localStorage.setItem('nexetl.sidebar.collapsed', String(collapsed)); }
 </script>

@@ -15,6 +15,12 @@ export type ConnectorDefinition = {
   key: string; displayName: string; category: 'SOURCE' | 'TARGET' | 'BOTH';
   description: string; vendor: string; version: string; availability: string; capabilities: string[];
 };
+export type PipelineDesignNodeType = 'SOURCE' | 'TRANSFORM' | 'TARGET';
+export type PipelineDesignNode = { id: string; type: PipelineDesignNodeType; label: string; connectorKey: string | null; positionX: number; positionY: number };
+export type PipelineDesignEdge = { id: string; sourceNodeId: string; targetNodeId: string };
+export type PipelineDesign = { pipelineId: string; revision: number; nodes: PipelineDesignNode[]; edges: PipelineDesignEdge[]; updatedAt: string | null };
+export type PipelineDesignValidationIssue = { code: string; message: string; nodeId?: string };
+export type PipelineDesignValidationResult = { valid: boolean; issues: PipelineDesignValidationIssue[] };
 export type PipelineErrorState = 'authentication' | 'authorization' | 'not_found' | 'validation' | 'csrf' | 'archived' | 'service';
 
 async function safeError(response: Response): Promise<NexetlError> {
@@ -63,7 +69,11 @@ export function getConnector(key: string): Promise<ConnectorDefinition> {
   return request(`/api/connectors/${encodeURIComponent(key)}/`);
 }
 
-async function mutate<T>(path: string, method: 'POST' | 'PATCH', body?: object): Promise<T> {
+export function getPipelineDesign(id: string): Promise<PipelineDesign> { return request(`/api/pipeline-definitions/${encodeURIComponent(id)}/design/`); }
+export function savePipelineDesign(id: string, design: Pick<PipelineDesign, 'revision' | 'nodes' | 'edges'>): Promise<PipelineDesign> { return mutate(`/api/pipeline-definitions/${encodeURIComponent(id)}/design/`, 'PUT', design); }
+export function validatePipelineDesign(id: string): Promise<PipelineDesignValidationResult> { return mutate(`/api/pipeline-definitions/${encodeURIComponent(id)}/design/validate/`, 'POST'); }
+
+async function mutate<T>(path: string, method: 'POST' | 'PATCH' | 'PUT', body?: object): Promise<T> {
   await bootstrapCsrf();
   return request(path, {
     method,

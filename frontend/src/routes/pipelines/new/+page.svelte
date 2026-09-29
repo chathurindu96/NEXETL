@@ -3,7 +3,7 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte'; import Button from '$lib/components/ui/Button.svelte'; import Alert from '$lib/components/ui/Alert.svelte';
   let name = $state(''), description = $state(''), pending = $state(false), error = $state(''), nameError = $state(''), descriptionError = $state('');
   function validate() { nameError = !name.trim() ? 'Pipeline name is required.' : name.trim().length > 120 ? 'Pipeline name must be at most 120 characters.' : ''; descriptionError = description.length > 1000 ? 'Description must be at most 1000 characters.' : ''; return !nameError && !descriptionError; }
-  async function submit() { if (!validate()) return; pending = true; error = ''; try { const definition = await registerPipelineDefinition(name.trim(), description.trim()); await goto(`/pipelines/${definition.id}`); } catch (failure) { error = pipelineErrorMessage(failure as NexetlError); } finally { pending = false; } }
+  async function submit() { if (!validate()) return; pending = true; error = ''; try { const definition = await registerPipelineDefinition(name.trim(), description.trim()); await goto(`/pipelines/${definition.id}/design`); } catch (failure) { error = pipelineErrorMessage(failure as NexetlError); } finally { pending = false; } }
 </script>
 <svelte:head><title>New Pipeline | NEXETL</title></svelte:head>
 <PageHeader title="New Pipeline" description="Create a Pipeline Definition to begin authoring a data flow." />
