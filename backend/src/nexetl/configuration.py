@@ -26,6 +26,7 @@ KNOWN_SECRET_PLACEHOLDERS = frozenset(
         "replace-with-a-real-password",
         "your_private_local_secret",
         "your_private_local_database_password",
+        "replace-with-private-connection-secret-key-material",
     }
 )
 """Known documentation placeholders that are never valid runtime secrets."""
@@ -52,6 +53,19 @@ class DevelopmentSuperadminConfiguration:
 
 
 @dataclass(frozen=True)
+class RuntimeConfiguration:
+    batch_size: int = 1000
+    preview_default_rows: int = 50
+    preview_max_rows: int = 200
+    preview_max_bytes: int = 1_000_000
+    operation_timeout_seconds: int = 30
+    worker_concurrency: int = 1
+    worker_poll_seconds: int = 2
+    worker_lease_seconds: int = 300
+    stateful_max_rows: int = 250_000
+
+
+@dataclass(frozen=True)
 class BackendConfiguration:
     """Typed backend values resolved exclusively from the process environment."""
 
@@ -63,6 +77,8 @@ class BackendConfiguration:
     csrf_cookie_secure: bool
     csrf_trusted_origins: tuple[str, ...]
     development_superadmin: DevelopmentSuperadminConfiguration
+    connection_secret_key: str | None = field(repr=False)
+    runtime: RuntimeConfiguration
 
 
 def configure_django_settings_module() -> None:
@@ -106,6 +122,18 @@ def load_backend_configuration(
             username=_text("NEXETL_DEV_SUPERADMIN_USERNAME", source, default="admin"),
             password=_text("NEXETL_DEV_SUPERADMIN_PASSWORD", source, default="123"),
         ),
+        connection_secret_key=_optional_text("NEXETL_CONNECTION_SECRET_KEY", source),
+        runtime=RuntimeConfiguration(
+            batch_size=_integer("NEXETL_BATCH_SIZE", source, default=1000),
+            preview_default_rows=_integer("NEXETL_PREVIEW_DEFAULT_ROWS", source, default=50),
+            preview_max_rows=_integer("NEXETL_PREVIEW_MAX_ROWS", source, default=200),
+            preview_max_bytes=_integer("NEXETL_PREVIEW_MAX_BYTES", source, default=1_000_000),
+            operation_timeout_seconds=_integer("NEXETL_OPERATION_TIMEOUT_SECONDS", source, default=30),
+            worker_concurrency=_integer("NEXETL_WORKER_CONCURRENCY", source, default=1),
+            worker_poll_seconds=_integer("NEXETL_WORKER_POLL_SECONDS", source, default=2),
+            worker_lease_seconds=_integer("NEXETL_WORKER_LEASE_SECONDS", source, default=300),
+            stateful_max_rows=_integer("NEXETL_STATEFUL_MAX_ROWS", source, default=250_000),
+        ),
     )
 
 
@@ -117,10 +145,21 @@ def validate_backend_configuration(
     _non_empty("NEXETL_DB_NAME", configuration.database.name)
     _non_empty("NEXETL_DB_USER", configuration.database.user)
     _required_secret("NEXETL_DB_PASSWORD", configuration.database.password)
+    if configuration.connection_secret_key in KNOWN_SECRET_PLACEHOLDERS:
+        raise ConfigurationError("NEXETL_CONNECTION_SECRET_KEY must not use a documentation placeholder")
     _non_empty("NEXETL_DB_HOST", configuration.database.host)
     _port_in_range(configuration.database.port)
     _non_empty_allowed_hosts(configuration.allowed_hosts)
     _valid_trusted_origins(configuration.csrf_trusted_origins)
+    _range("NEXETL_BATCH_SIZE", configuration.runtime.batch_size, 1, 100_000)
+    _range("NEXETL_PREVIEW_DEFAULT_ROWS", configuration.runtime.preview_default_rows, 1, configuration.runtime.preview_max_rows)
+    _range("NEXETL_PREVIEW_MAX_ROWS", configuration.runtime.preview_max_rows, 1, 1000)
+    _range("NEXETL_PREVIEW_MAX_BYTES", configuration.runtime.preview_max_bytes, 1024, 10_000_000)
+    _range("NEXETL_OPERATION_TIMEOUT_SECONDS", configuration.runtime.operation_timeout_seconds, 1, 3600)
+    _range("NEXETL_WORKER_CONCURRENCY", configuration.runtime.worker_concurrency, 1, 8)
+    _range("NEXETL_WORKER_POLL_SECONDS", configuration.runtime.worker_poll_seconds, 1, 60)
+    _range("NEXETL_WORKER_LEASE_SECONDS", configuration.runtime.worker_lease_seconds, 30, 3600)
+    _range("NEXETL_STATEFUL_MAX_ROWS", configuration.runtime.stateful_max_rows, 1, 10_000_000)
 
     return configuration
 
@@ -175,6 +214,11 @@ def _non_empty(name: str, value: str) -> None:
 def _port_in_range(value: int) -> None:
     if not 1 <= value <= 65535:
         raise ConfigurationError("NEXETL_DB_PORT must be an integer from 1 through 65535")
+
+
+def _range(name: str, value: int, minimum: int, maximum: int) -> None:
+    if not minimum <= value <= maximum:
+        raise ConfigurationError(f"{name} must be an integer from {minimum} through {maximum}")
 
 
 def _non_empty_allowed_hosts(hosts: tuple[str, ...]) -> None:

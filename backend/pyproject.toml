@@ -4,9 +4,13 @@ version = "0.1.0"
 description = "NEXETL backend dependency boundary"
 requires-python = ">=3.13"
 dependencies = [
+    "croniter>=6.2.4",
+    "cryptography>=50.0.1",
     "django>=6.1.1",
     "djangorestframework>=3.18.1",
     "psycopg[binary]>=3.3.6",
+    "pymysql>=1.2.3",
+    "pyodbc>=5.3.0",
     "python-dotenv>=1.2.3",
 ]
 

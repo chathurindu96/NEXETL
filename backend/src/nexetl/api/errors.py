@@ -4,6 +4,7 @@ import logging
 
 from rest_framework import status
 from rest_framework.exceptions import (
+    APIException,
     MethodNotAllowed,
     NotAuthenticated,
     NotFound,
@@ -16,6 +17,18 @@ from nexetl.api.authentication import CsrfRejected
 
 
 logger = logging.getLogger("nexetl.api")
+
+
+class NexetlAPIError(APIException):
+    """Safe application error whose symbolic code is part of the REST contract."""
+
+    def __init__(self, code: str, message: str, *, http_status: int = 400, category: str = "request", details: object | None = None) -> None:
+        super().__init__(message, code=code)
+        self.nexetl_code = code
+        self.public_message = message
+        self.status_code = http_status
+        self.category = category
+        self.public_details = details
 
 
 def exception_handler(exc: Exception, context: dict[str, object]) -> Response:
@@ -32,6 +45,8 @@ def exception_handler(exc: Exception, context: dict[str, object]) -> Response:
 
 
 def _translate(exc: Exception) -> tuple[str, str, str, int, object | None]:
+    if isinstance(exc, NexetlAPIError):
+        return exc.nexetl_code, exc.category, exc.public_message, exc.status_code, exc.public_details
     if isinstance(exc, CsrfRejected):
         return (
             "NEXETL_CSRF_REJECTED",

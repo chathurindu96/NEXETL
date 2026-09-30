@@ -22,6 +22,7 @@ from pipelines.connectors import CATALOGUE
 from pipelines.domain import PipelineDefinitionId
 from pipelines.infrastructure.persistence.store import DjangoPipelineDefinitionStore
 from pipelines.infrastructure.persistence.models import PipelineDefinitionRecord, PipelineDesignRecord, PipelineDesignNodeRecord, PipelineDesignEdgeRecord
+from pipelines.runtime.compiler import compile_snapshot
 
 
 @ensure_csrf_cookie
@@ -173,9 +174,9 @@ class PipelineDesignView(APIView):
             design.nodes.all().delete()
             nodes = payload["nodes"]
             for node in nodes:
-                PipelineDesignNodeRecord.objects.create(design=design, id=UUID(node["id"]), type=node["type"], label=node["label"], connector_key=node.get("connectorKey"), position_x=node["positionX"], position_y=node["positionY"])
+                PipelineDesignNodeRecord.objects.create(design=design, id=UUID(node["id"]), type=node["type"], kind=node.get("kind", "legacy"), label=node["label"], connector_key=node.get("connectorKey"), configuration_version=node.get("configurationVersion", 1), configuration=node.get("configuration", {}), input_schema=node.get("inputSchema", []), output_schema=node.get("outputSchema", []), position_x=node["positionX"], position_y=node["positionY"])
             for edge in payload["edges"]:
-                PipelineDesignEdgeRecord.objects.create(design=design, id=UUID(edge["id"]), source_node_id=UUID(edge["sourceNodeId"]), target_node_id=UUID(edge["targetNodeId"]))
+                PipelineDesignEdgeRecord.objects.create(design=design, id=UUID(edge["id"]), source_node_id=UUID(edge["sourceNodeId"]), source_port=edge.get("sourcePort", "output"), target_node_id=UUID(edge["targetNodeId"]), target_port=edge.get("targetPort", "input"))
             design.revision += 1; design.save(update_fields=["revision", "updated_at"])
         return Response(_design_representation(design, str(pipeline.id)))
 
@@ -188,11 +189,12 @@ class PipelineDesignValidationView(APIView):
         pipeline = _pipeline_record(pipeline_definition_id)
         design = PipelineDesignRecord.objects.filter(pipeline=pipeline).first()
         representation = _design_representation(design, str(pipeline.id))
-        issues = _structural_issues(representation["nodes"], representation["edges"])
+        result = compile_snapshot(representation)
+        issues = list(result.issues)
         types = [node["type"] for node in representation["nodes"]]
-        if "SOURCE" not in types: issues.append({"code": "NEXETL_DESIGN_MISSING_SOURCE", "message": "A complete design needs a source."})
-        if "TARGET" not in types: issues.append({"code": "NEXETL_DESIGN_MISSING_TARGET", "message": "A complete design needs a target."})
-        return Response({"valid": not issues, "issues": issues})
+        if "SOURCE" not in types: issues.append({"code": "NEXETL_DESIGN_MISSING_SOURCE", "severity": "ERROR", "message": "A complete design needs a source."})
+        if "TARGET" not in types: issues.append({"code": "NEXETL_DESIGN_MISSING_TARGET", "severity": "ERROR", "message": "A complete design needs a target."})
+        return Response({"valid": not any(issue.get("severity", "ERROR") == "ERROR" for issue in issues), "issues": issues, "schemas": result.schemas})
 
 
 def _require_capability(request: HttpRequest, permission: str) -> None:
@@ -269,7 +271,7 @@ def _design_representation(design: PipelineDesignRecord | None, pipeline_id: str
     if design is None:
         return {"pipelineId": pipeline_id, "revision": 1, "nodes": [], "edges": [], "updatedAt": None}
     nodes = list(design.nodes.all())
-    return {"pipelineId": pipeline_id, "revision": design.revision, "updatedAt": design.updated_at.isoformat(), "nodes": [{"id": str(node.id), "type": node.type, "label": node.label, "connectorKey": node.connector_key, "positionX": node.position_x, "positionY": node.position_y} for node in nodes], "edges": [{"id": str(edge.id), "sourceNodeId": str(edge.source_node_id), "targetNodeId": str(edge.target_node_id)} for edge in design.edges.all()]}
+    return {"pipelineId": pipeline_id, "revision": design.revision, "updatedAt": design.updated_at.isoformat(), "nodes": [{"id": str(node.id), "type": node.type, "kind": node.kind, "label": node.label, "connectorKey": node.connector_key, "configurationVersion": node.configuration_version, "configuration": node.configuration, "inputSchema": node.input_schema, "outputSchema": node.output_schema, "positionX": node.position_x, "positionY": node.position_y} for node in nodes], "edges": [{"id": str(edge.id), "sourceNodeId": str(edge.source_node_id), "sourcePort": edge.source_port, "targetNodeId": str(edge.target_node_id), "targetPort": edge.target_port} for edge in design.edges.all()]}
 
 
 def _structural_issues(nodes: object, edges: object) -> list[dict[str, str]]:
@@ -280,10 +282,10 @@ def _structural_issues(nodes: object, edges: object) -> list[dict[str, str]]:
     for node in nodes:
         if not isinstance(node, dict) or not all(key in node for key in ("id", "type", "label", "positionX", "positionY")):
             issues.append({"code": "NEXETL_DESIGN_NODE_INVALID", "message": "A node is invalid."}); continue
-        if node["type"] not in {"SOURCE", "TRANSFORM", "TARGET"}:
+        if node["type"] not in {"SOURCE", "TRANSFORM", "TARGET", "GOVERNANCE"}:
             issues.append({"code": "NEXETL_DESIGN_NODE_TYPE_INVALID", "message": "Unsupported node type."})
         connector = node.get("connectorKey")
-        if node["type"] in {"SOURCE", "TARGET"} and not connector: issues.append({"code": "NEXETL_DESIGN_CONNECTOR_REQUIRED", "message": "Source and target nodes need a connector.", "nodeId": str(node["id"])})
+        if node.get("kind", "legacy") == "legacy" and node["type"] in {"SOURCE", "TARGET"} and not connector: issues.append({"code": "NEXETL_DESIGN_CONNECTOR_REQUIRED", "message": "Legacy source and target nodes need a connector.", "nodeId": str(node["id"])})
         if node["type"] == "TRANSFORM" and connector: issues.append({"code": "NEXETL_DESIGN_CONNECTOR_FORBIDDEN", "message": "Transform nodes cannot have a connector.", "nodeId": str(node["id"])})
         if connector and not any(item.key == connector for item in CATALOGUE): issues.append({"code": "NEXETL_CONNECTOR_NOT_FOUND", "message": "Connector was not found.", "nodeId": str(node["id"])})
         node_map[str(node["id"])] = node
