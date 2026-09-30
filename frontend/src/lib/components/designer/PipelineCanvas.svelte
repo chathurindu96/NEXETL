@@ -1,31 +1,33 @@
 <script lang="ts">
   import '@xyflow/svelte/dist/style.css';
-  import { Background, BackgroundVariant, Controls, SvelteFlow, useSvelteFlow, type Connection } from '@xyflow/svelte';
+  import { Background, BackgroundVariant, Controls, MiniMap, SvelteFlow, useSvelteFlow, type Connection } from '@xyflow/svelte';
   import Icon from '$lib/components/ui/Icon.svelte';
   import type { PipelineFlowEdge, PipelineFlowNode } from '$lib/designer/graph-model';
   import PipelineNode from './PipelineNode.svelte';
 
-  let { nodes = $bindable(), edges = $bindable(), readonly, fitRequest, connectionMessage, onselectnode, onselectedge, onclear, onbeforeconnect, onconnected, ondragstop, ondelete }: {
+  let { nodes = $bindable(), edges = $bindable(), readonly, fitRequest, connectionMessage, onselectnode, onselectedge, onclear, onbeforeconnect, onconnected, ondragstart, ondragstop, ondelete, ondropnode }: {
     nodes: PipelineFlowNode[]; edges: PipelineFlowEdge[]; readonly: boolean; fitRequest: number; connectionMessage: string;
     onselectnode:(id:string)=>void; onselectedge:(id:string)=>void; onclear:()=>void;
-    onbeforeconnect:(connection:Connection)=>PipelineFlowEdge|false; onconnected:()=>void; ondragstop:()=>void; ondelete:(nodes:PipelineFlowNode[],edges:PipelineFlowEdge[])=>void;
+    onbeforeconnect:(connection:Connection)=>PipelineFlowEdge|false; onconnected:()=>void; ondragstart:()=>void; ondragstop:()=>void; ondelete:(nodes:PipelineFlowNode[],edges:PipelineFlowEdge[])=>void;
+    ondropnode:(kind:string,position:{x:number;y:number})=>void;
   } = $props();
   const nodeTypes = { pipeline: PipelineNode };
-  const { fitView } = useSvelteFlow<PipelineFlowNode, PipelineFlowEdge>();
+  const { fitView, screenToFlowPosition } = useSvelteFlow<PipelineFlowNode, PipelineFlowEdge>();
   let initialized = $state(false), lastFitRequest = $state(0);
   $effect(() => { if (initialized && fitRequest !== lastFitRequest) { lastFitRequest = fitRequest; void fitView({ padding: .22, maxZoom: 1.15, duration: 240 }); } });
 </script>
 
-<section class="canvas" aria-label="Pipeline design canvas">
+<section class="canvas" aria-label="Pipeline design canvas" ondragover={(event)=>{if(!readonly){event.preventDefault();if(event.dataTransfer)event.dataTransfer.dropEffect='copy'}}} ondrop={(event)=>{event.preventDefault();const kind=event.dataTransfer?.getData('application/x-nexetl-node-kind');if(kind&&!readonly)ondropnode(kind,screenToFlowPosition({x:event.clientX,y:event.clientY}))}}>
   <SvelteFlow bind:nodes bind:edges {nodeTypes} fitView={nodes.length > 0} fitViewOptions={{ padding: .22, maxZoom: 1.1 }}
     nodesDraggable={!readonly} nodesConnectable={!readonly} elementsSelectable={true} minZoom={.35} maxZoom={1.8}
     panOnDrag={true} zoomOnScroll={true} snapGrid={[10,10]} defaultEdgeOptions={{ type:'smoothstep' }}
     deleteKey={readonly ? null : ['Backspace','Delete']} oninit={() => initialized = true}
     onnodeclick={({node}) => onselectnode(node.id)} onedgeclick={({edge}) => onselectedge(edge.id)} onpaneclick={onclear}
-    onnodedragstop={ondragstop} onbeforeconnect={onbeforeconnect} onconnect={onconnected}
+    onnodedragstart={ondragstart} onnodedragstop={ondragstop} onbeforeconnect={onbeforeconnect} onconnect={onconnected}
     ondelete={({nodes:deletedNodes,edges:deletedEdges}) => ondelete(deletedNodes,deletedEdges)} colorMode="light">
     <Background variant={BackgroundVariant.Dots} gap={20} size={1.25} patternColor="#c9d2de" />
     <Controls position="bottom-left" showLock={false} />
+    {#if nodes.length>5}<MiniMap position="bottom-right" pannable zoomable maskColor="rgb(242 245 250 / 72%)" />{/if}
   </SvelteFlow>
   {#if nodes.length===0}<div class="empty"><span><Icon name="pipelines" size={25}/></span><h2>Build your Pipeline</h2><p>Add a Source, Transform or Target from the node palette.</p></div>{/if}
   {#if connectionMessage}<div class="connection-message" role="status">{connectionMessage}</div>{/if}

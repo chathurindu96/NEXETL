@@ -1,11 +1,144 @@
 <script lang="ts">
-  import { goto } from '$app/navigation'; import { pipelineErrorMessage, registerPipelineDefinition, type NexetlError } from '$lib/api/pipelines';
-  import PageHeader from '$lib/components/ui/PageHeader.svelte'; import Button from '$lib/components/ui/Button.svelte'; import Alert from '$lib/components/ui/Alert.svelte';
-  let name = $state(''), description = $state(''), pending = $state(false), error = $state(''), nameError = $state(''), descriptionError = $state('');
-  function validate() { nameError = !name.trim() ? 'Pipeline name is required.' : name.trim().length > 120 ? 'Pipeline name must be at most 120 characters.' : ''; descriptionError = description.length > 1000 ? 'Description must be at most 1000 characters.' : ''; return !nameError && !descriptionError; }
-  async function submit() { if (!validate()) return; pending = true; error = ''; try { const definition = await registerPipelineDefinition(name.trim(), description.trim()); await goto(`/pipelines/${definition.id}/design`); } catch (failure) { error = pipelineErrorMessage(failure as NexetlError); } finally { pending = false; } }
+  import { goto } from "$app/navigation";
+  import {
+    pipelineErrorMessage,
+    registerPipelineDefinition,
+    type NexetlError,
+  } from "$lib/api/pipelines";
+  import PageHeader from "$lib/components/ui/PageHeader.svelte";
+  import Button from "$lib/components/ui/Button.svelte";
+  import Alert from "$lib/components/ui/Alert.svelte";
+  let name = $state(""),
+    description = $state(""),
+    pending = $state(false),
+    error = $state(""),
+    nameError = $state(""),
+    descriptionError = $state("");
+  function validate() {
+    nameError = !name.trim()
+      ? "Pipeline name is required."
+      : name.trim().length > 120
+        ? "Pipeline name must be at most 120 characters."
+        : "";
+    descriptionError =
+      description.length > 1000
+        ? "Description must be at most 1000 characters."
+        : "";
+    return !nameError && !descriptionError;
+  }
+  async function submit() {
+    if (!validate()) return;
+    pending = true;
+    error = "";
+    try {
+      const definition = await registerPipelineDefinition(
+        name.trim(),
+        description.trim(),
+      );
+      await goto(`/pipelines/${definition.id}/design`);
+    } catch (failure) {
+      error = pipelineErrorMessage(failure as NexetlError);
+    } finally {
+      pending = false;
+    }
+  }
 </script>
+
 <svelte:head><title>New Pipeline | NEXETL</title></svelte:head>
-<PageHeader title="Create Pipeline" description="Set up the Pipeline identity. You can design the data flow next." />
-<form onsubmit={(event) => { event.preventDefault(); void submit(); }} novalidate><div class="form-body"><label for="name">Name <span aria-hidden="true">*</span></label><input id="name" bind:value={name} maxlength="120" autocomplete="off" aria-invalid={Boolean(nameError)} aria-describedby="name-help" onblur={validate}/><small class:error={nameError} id="name-help">{nameError||`${name.length} of 120 characters`}</small><label for="description">Description</label><textarea id="description" bind:value={description} maxlength="1000" aria-invalid={Boolean(descriptionError)} aria-describedby="description-help" onblur={validate} placeholder="What does this Pipeline prepare or deliver?"></textarea><small class:error={descriptionError} id="description-help">{descriptionError||`${description.length} of 1000 characters`}</small>{#if error}<Alert variant="error">{error}</Alert>{/if}</div><footer><Button variant="secondary" onclick={() => goto('/pipelines')}>Cancel</Button><Button type="submit" loading={pending}>Create and design</Button></footer></form>
-<style>form{max-width:38rem;overflow:hidden;border:1px solid var(--border-default);border-radius:var(--radius-md);background:#fff;box-shadow:var(--shadow-sm)}.form-body{display:grid;gap:.35rem;padding:1.25rem}label{margin-top:.65rem;color:var(--text-secondary);font-size:.72rem;font-weight:650}input,textarea{width:100%;border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:.58rem .65rem;color:var(--text-primary);font:inherit;font-size:.78rem}input:focus,textarea:focus{border-color:var(--accent);box-shadow:var(--focus-ring);outline:0}textarea{min-height:7.5rem;resize:vertical}small{color:var(--text-muted);font-size:.62rem}.error{color:var(--danger)}footer{display:flex;justify-content:flex-end;gap:.5rem;border-top:1px solid var(--border-default);background:var(--bg-subtle);padding:.8rem 1.25rem}</style>
+<PageHeader
+  title="Create Pipeline"
+  description="Set up the Pipeline identity. You can design the data flow next."
+/>
+<form
+  onsubmit={(event) => {
+    event.preventDefault();
+    void submit();
+  }}
+  novalidate
+>
+  <div class="form-body">
+    <label for="name">Name <span aria-hidden="true">*</span></label><input
+      id="name"
+      bind:value={name}
+      maxlength="120"
+      autocomplete="off"
+      aria-invalid={Boolean(nameError)}
+      aria-describedby="name-help"
+      onblur={validate}
+    /><small class:error={nameError} id="name-help"
+      >{nameError || `${name.length} of 120 characters`}</small
+    ><label for="description">Description</label><textarea
+      id="description"
+      bind:value={description}
+      maxlength="1000"
+      aria-invalid={Boolean(descriptionError)}
+      aria-describedby="description-help"
+      onblur={validate}
+      placeholder="What does this Pipeline prepare or deliver?"
+    ></textarea><small class:error={descriptionError} id="description-help"
+      >{descriptionError || `${description.length} of 1000 characters`}</small
+    >{#if error}<Alert variant="error">{error}</Alert>{/if}
+  </div>
+  <footer>
+    <Button variant="secondary" onclick={() => goto("/pipelines")}
+      >Cancel</Button
+    ><Button type="submit" loading={pending}>Create and design</Button>
+  </footer>
+</form>
+
+<style>
+  form {
+    max-width: 38rem;
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .form-body {
+    display: grid;
+    gap: 0.35rem;
+    padding: 1.25rem;
+  }
+  label {
+    margin-top: 0.65rem;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 650;
+  }
+  input,
+  textarea {
+    width: 100%;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    padding: 0.58rem 0.65rem;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.78rem;
+  }
+  input:focus,
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
+    outline: 0;
+  }
+  textarea {
+    min-height: 7.5rem;
+    resize: vertical;
+  }
+  small {
+    color: var(--text-muted);
+    font-size: 0.62rem;
+  }
+  .error {
+    color: var(--danger);
+  }
+  footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    border-top: 1px solid var(--border-default);
+    background: var(--bg-subtle);
+    padding: 0.8rem 1.25rem;
+  }
+</style>

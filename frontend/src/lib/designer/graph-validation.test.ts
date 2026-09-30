@@ -4,11 +4,11 @@ import { checkConnection } from './graph-validation';
 import type { PipelineDesign } from '$lib/api/pipelines';
 
 const graph=apiDesignToFlow({pipelineId:'p',revision:1,updatedAt:null,nodes:[
-  {id:'s',type:'SOURCE',label:'Source',connectorKey:'postgresql',positionX:0,positionY:0},
-  {id:'a',type:'TRANSFORM',label:'A',connectorKey:null,positionX:200,positionY:0},
-  {id:'b',type:'TRANSFORM',label:'B',connectorKey:null,positionX:400,positionY:0},
-  {id:'t',type:'TARGET',label:'Target',connectorKey:'postgresql',positionX:600,positionY:0},
-],edges:[{id:'e1',sourceNodeId:'s',targetNodeId:'a'},{id:'e2',sourceNodeId:'a',targetNodeId:'b'}]} satisfies PipelineDesign);
+  {id:'s',type:'SOURCE',kind:'database_source',label:'Source',connectorKey:'postgresql',configurationVersion:1,configuration:{},inputSchema:[],outputSchema:[],positionX:0,positionY:0},
+  {id:'a',type:'TRANSFORM',kind:'filter',label:'A',connectorKey:null,configurationVersion:1,configuration:{},inputSchema:[],outputSchema:[],positionX:200,positionY:0},
+  {id:'b',type:'TRANSFORM',kind:'filter',label:'B',connectorKey:null,configurationVersion:1,configuration:{},inputSchema:[],outputSchema:[],positionX:400,positionY:0},
+  {id:'t',type:'TARGET',kind:'database_target',label:'Target',connectorKey:'postgresql',configurationVersion:1,configuration:{},inputSchema:[],outputSchema:[],positionX:600,positionY:0},
+],edges:[{id:'e1',sourceNodeId:'s',sourcePort:'output',targetNodeId:'a',targetPort:'input'},{id:'e2',sourceNodeId:'a',sourcePort:'output',targetNodeId:'b',targetPort:'input'}]} satisfies PipelineDesign);
 
 describe('connection validation',()=>{
   it('accepts a valid forward connection',()=>expect(checkConnection({source:'b',target:'t'},graph.nodes,graph.edges)).toEqual({valid:true}));
