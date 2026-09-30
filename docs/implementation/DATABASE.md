@@ -149,11 +149,20 @@ has one `id:uuid:NO` column. No ad-hoc DDL was used.
 
 Because the daemon was unavailable, PostgreSQL was not started and the documented SELECT queries and Django connectivity command were not executed. Runtime connectivity remains blocked only by current local Docker state; no competing database configuration was introduced.
 
-# Increment 2 design-time schema
+# Pipeline platform schema
 
 Pipeline metadata remains in `nexetl_pipeline_definition`. Persistent authoring
 designs are normalized in `nexetl_pipeline_design`, `nexetl_pipeline_design_node`,
-and `nexetl_pipeline_design_edge`. The design has a revision field for optimistic
-concurrency, node positions and optional connector keys, and foreign-keyed edge
-endpoints with a unique design/source/target constraint. These tables contain no
-credentials, runtime configuration, execution records, or operational data.
+and `nexetl_pipeline_design_edge`. Edges include named source and target ports.
+
+Configured endpoints use `nexetl_connection`; its normal JSON configuration
+contains no password. `nexetl_connection_secret` contains only provider metadata
+and the local provider's Fernet ciphertext. Production may replace this provider
+behind the same opaque-reference boundary.
+
+Immutable execution metadata is owned by `nexetl_pipeline_version`,
+`nexetl_pipeline_version_node`, and `nexetl_pipeline_version_edge`. Operational
+state is owned by `nexetl_pipeline_run`, `nexetl_pipeline_node_run`, and
+`nexetl_pipeline_run_event`. `nexetl_pipeline_schedule` owns timezone and next
+occurrence state. Migrations `0005` and `0006` create this schema; no ad-hoc DDL
+is required or supported.

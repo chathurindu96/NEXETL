@@ -135,3 +135,15 @@ This audit trail records every materially relevant terminal command executed dur
 - **PASS**: command completed or a negative assertion returned the expected no-match result.
 - **FAIL**: command did not complete its intended check; the failure and any retry remain visible.
 - **WARNING**: the intended check completed but emitted an environmental warning.
+# Complete Pipeline platform increment (2026-09-30)
+
+- `uv add cryptography croniter pymysql pyodbc` — added locked connector,
+  secret-provider, and schedule dependencies.
+- `uv run python manage.py makemigrations pipelines` — generated migrations
+  `0005` and `0006` for Connection, immutable version, schedule, Run, node Run,
+  event, schema-aware node, and named-port persistence.
+- `uv run pytest` — exercises backend, architecture, API, runtime, transform,
+  queue, security, and integration boundaries.
+- `npm test`, `npm run check`, `npm run build` — verify the Svelte workspace.
+- `uv run python manage.py run_pipeline_worker --once` and
+  `run_pipeline_scheduler --once` — deterministic local runtime smoke commands.

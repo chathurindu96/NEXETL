@@ -1,4 +1,8 @@
-# Backend Foundation Run Commands
+# NEXETL Local Runtime Commands
+
+The application runtime has five independently started concerns: PostgreSQL,
+the Django API, the Pipeline worker, the scheduler, and SvelteKit. The web API
+only persists Run requests; it never executes ETL work in an HTTP request.
 
 All commands are Windows `cmd.exe` compatible. Secret examples are placeholders for local use only; choose private values and never commit them. For local development, NEXETL loads the ignored repository-root `.env` without overwriting explicit process or deployment environment values.
 
@@ -247,6 +251,39 @@ local `/favicon.svg` prevents a normal-workflow favicon 404.
 The frontend visual foundation is loaded by `src/routes/+layout.svelte` from
 `src/app.css`. It uses semantic CSS tokens, a responsive shell, and local shared
 components only; no external font or UI-framework download is required.
+
+## Start the Pipeline worker
+
+From `C:\Projects\NEXETL\backend` in a separate terminal:
+
+```cmd
+uv run python manage.py run_pipeline_worker --concurrency 2
+```
+
+The worker claims queued Runs transactionally with PostgreSQL row locks,
+renews a bounded lease, executes DAG nodes, and persists node metrics and safe
+events. `--once` is useful for deterministic local and CI processing.
+
+## Start the Pipeline scheduler
+
+From `C:\Projects\NEXETL\backend` in a separate terminal:
+
+```cmd
+uv run python manage.py run_pipeline_scheduler
+```
+
+The scheduler locks due schedule rows, creates one Run per schedule occurrence,
+and advances the next timezone-aware cron occurrence. Use `--once` for a single
+scan. At least one worker must also be active to execute scheduled Runs.
+
+## Runtime health expectations
+
+- `GET /` verifies the web process is serving safe service metadata.
+- Django database connectivity proves the metadata database is reachable.
+- A worker is operational when queued Runs transition through RUNNING and its
+  heartbeat/lease is renewed; expired leases are surfaced as failed Runs.
+- A scheduler is operational when due schedules advance `nextRunAt` and create
+  SCHEDULED Runs. Sensitive connection diagnostics are never exposed publicly.
 
 ## Stop the Django development server
 

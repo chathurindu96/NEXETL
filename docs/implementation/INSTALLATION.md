@@ -162,6 +162,10 @@ Direct runtime dependencies:
 - Django 6.1.1
 - Django REST Framework 3.18.1
 - Psycopg 3.3.6 with `psycopg-binary` 3.3.6
+- cryptography 50.0.1 for authenticated local Connection-secret encryption
+- croniter 6.2.4 for bounded cron calculation
+- PyMySQL 1.2.3 for MySQL and MariaDB adapters
+- pyodbc 5.3.0 for SQL Server adapters (a compatible OS ODBC driver is also required)
 
 Direct development dependencies:
 

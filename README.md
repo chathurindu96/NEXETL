@@ -4,13 +4,11 @@ NEXETL is a next-generation extensible ETL and data integration platform.
 
 ## Project Status
 
-Gate 5 is open for Increment 1 — Pipeline Definition Registration and
-Inspection Foundation. Implementation is proceeding in the work-package order
-defined by `NEXETL-PLAN-001`.
-
-This repository currently contains the WP-01 repository and development
-foundation only. It intentionally contains no WP-02-or-later business or
-application implementation.
+The repository contains the NEXETL modular-monolith application and its complete
+Pipeline lifecycle increment: configured database Connections, schema-aware
+visual authoring, immutable executable versions, a PostgreSQL-backed Run queue,
+dedicated worker and scheduler processes, operational Run history, and guarded
+database source/target execution.
 
 ## Technology Direction
 
@@ -41,9 +39,8 @@ approved change to the controlled NEXETL baseline.
 
 - `backend/` owns Python project metadata, the `uv` lockfile, and backend tests.
 - `frontend/` owns npm project metadata, the npm lockfile, and frontend tests.
-- `tests/e2e/` is the repository-level end-to-end test boundary; Playwright
-  dependencies will remain owned by the frontend boundary when introduced by
-  the authorized work package.
+- `tests/e2e/` is the repository-level browser acceptance boundary; Playwright
+  dependencies are owned by the frontend boundary.
 - `compose.yaml` defines the local PostgreSQL dependency only.
 
 No root workspace package manager or monorepo orchestrator is used.
