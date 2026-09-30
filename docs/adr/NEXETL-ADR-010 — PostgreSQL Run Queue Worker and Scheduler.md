@@ -44,4 +44,3 @@ Concurrent claiming, duplicate prevention, crash/lease recovery, cooperative can
 ## Approval Record
 
 Decision: Accepted through the Product Owner's explicit 2026-09-30 fast-track authorization.
-

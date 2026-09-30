@@ -157,4 +157,3 @@ class ConnectionPreviewView(APIView):
             if len(rows)>=limit: break
         if len(json.dumps(rows,default=str).encode())>settings.CONFIGURATION.runtime.preview_max_bytes: raise NexetlAPIError("NEXETL_PREVIEW_PAYLOAD_LIMIT","The Preview exceeded the safe payload limit.",http_status=413,category="validation")
         return Response({"columns":list(rows[0]) if rows else [],"rows":rows,"rowCount":len(rows),"limit":limit})
-

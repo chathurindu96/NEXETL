@@ -75,4 +75,3 @@ NODE_TYPES = (
 )
 
 NODE_TYPE_BY_KEY = {item.key: item for item in NODE_TYPES}
-
